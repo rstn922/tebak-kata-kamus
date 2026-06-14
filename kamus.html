@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Game Tebak Kata Kamus - Baca definisi KBBI dan tebak katanya secepat mungkin!">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Tebak Kata Kamus</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: #111827;
+            --bg-card-glass: rgba(17, 24, 39, 0.85);
+            --bg-surface: #1e293b;
+            --bg-elevated: #334155;
+            --border-subtle: rgba(148, 163, 184, 0.12);
+            --border-medium: rgba(148, 163, 184, 0.2);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --correct-color: #22c55e;
+            --wrong-color: #ef4444;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100%;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            padding: 8px;
+            padding-top: calc(8px + var(--safe-area-top));
+            padding-bottom: calc(8px + var(--safe-area-bottom));
+            overflow: hidden;
+        }
+
+        /* Background ambient glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ===== APP CONTAINER ===== */
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 640px;
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-height: calc(100dvh - 16px - var(--safe-area-top) - var(--safe-area-bottom));
+            overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            #app {
+                padding: 28px 32px;
+                border-radius: 24px;
+            }
+        }
+
+        /* ===== LETTER BOXES ===== */
+        .letter-box {
+            width: 2rem;
+            height: 2.4rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 2px solid var(--border-medium);
+            background: var(--bg-surface);
+            text-transform: uppercase;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.02em;
+        }
+
+        @media (min-width: 380px) {
+            .letter-box {
+                width: 2.3rem;
+                height: 2.7rem;
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (min-width: 640px) {
+            .letter-box {
+                width: 3rem;
+                height: 3.2rem;
+                font-size: 1.5rem;
+                border-radius: 12px;
+            }
+        }
+
+        .letter-box.active {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.4), 0 0 4px rgba(59, 130, 246, 0.2) inset;
+            transform: scale(1.08);
+        }
+
+        .letter-box.correct {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-color: #22c55e;
+            color: white;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .letter-box.wrong {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+            color: white;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(3px); }
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-35px) scale(1.3); }
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.2); }
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes emoji-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .animate-pop { animation: pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .animate-shake { animation: shake 0.35s ease-in-out; }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+
+        .time-bonus {
+            position: absolute;
+            color: var(--accent-emerald);
+            font-weight: 800;
+            font-size: 1.25rem;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .timer-critical {
+            color: var(--wrong-color) !important;
+            animation: pulse-glow 1s ease-in-out infinite;
+            border-radius: 8px;
+            padding: 2px 6px;
+        }
+
+        /* ===== KEYBOARD ===== */
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin-bottom: 3px;
+        }
+
+        @media (min-width: 640px) {
+            .keyboard-row { gap: 5px; margin-bottom: 5px; }
+        }
+
+        .key {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            min-width: 0;
+            flex: 1;
+            transition: all 0.1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .key {
+                font-size: 1rem;
+                height: 50px;
+                border-radius: 10px;
+            }
+        }
+
+        .key:active {
+            background: #475569;
+            transform: scale(0.93);
+        }
+
+        .key::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+            border-radius: inherit;
+            pointer-events: none;
+        }
+
+        .key-backspace {
+            flex: 1.5;
+            background: #4a2332;
+            border-color: rgba(244, 63, 94, 0.2);
+            color: #fda4af;
+            font-size: 1.1rem;
+        }
+
+        .key-backspace:active {
+            background: #6b2140;
+        }
+
+        /* ===== CLUE BOX ===== */
+        .clue-box {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid var(--border-subtle);
+            max-height: 100px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .clue-box {
+                padding: 18px 22px;
+                max-height: 130px;
+                border-radius: 16px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .clue-box::-webkit-scrollbar { width: 4px; }
+        .clue-box::-webkit-scrollbar-track { background: transparent; }
+        .clue-box::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+
+        /* ===== MENU BUTTONS ===== */
+        .btn-mode {
+            width: 100%;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+
+        .btn-mode::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .btn-mode:active { transform: scale(0.97); }
+
+        .btn-easy {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+        .btn-easy:hover { box-shadow: 0 8px 32px rgba(59, 130, 246, 0.45); }
+
+        .btn-hard {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.3);
+        }
+        .btn-hard:hover { box-shadow: 0 8px 32px rgba(244, 63, 94, 0.45); }
+
+        .btn-subtitle {
+            font-size: 0.7rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .btn-retry {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            background: linear-gradient(135deg, var(--bg-elevated), var(--bg-surface));
+            border: 1px solid var(--border-medium);
+        }
+
+        .btn-retry:active { transform: scale(0.95); }
+        .btn-retry:hover { background: var(--bg-elevated); }
+
+        /* ===== HEADER BAR ===== */
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        @media (min-width: 640px) {
+            .game-header {
+                padding-bottom: 16px;
+                margin-bottom: 16px;
+            }
+        }
+
+        .header-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .timer-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            transition: color 0.3s;
+            line-height: 1;
+        }
+
+        @media (min-width: 640px) {
+            .timer-value { font-size: 2rem; }
+        }
+
+        .counter-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-emerald);
+            line-height: 1;
+        }
+
+        @media (min-width: 640px) {
+            .counter-value { font-size: 1.4rem; }
+        }
+
+        /* ===== WORD CONTAINER ===== */
+        .word-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 16px;
+            min-height: 50px;
+            align-items: center;
+        }
+
+        @media (min-width: 640px) {
+            .word-container {
+                gap: 6px;
+                margin-bottom: 24px;
+                min-height: 60px;
+            }
+        }
+
+        /* ===== RESULT SCREEN ===== */
+        .result-container {
+            text-align: center;
+            width: 100%;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .result-emoji {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            animation: emoji-bounce 2s ease-in-out infinite;
+            line-height: 1;
+        }
+
+        @media (min-width: 640px) {
+            .result-emoji { font-size: 4.5rem; }
+        }
+
+        .result-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        @media (min-width: 640px) {
+            .result-title { font-size: 2rem; }
+        }
+
+        .result-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            max-width: 380px;
+            margin: 0 auto 8px;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        @media (min-width: 640px) {
+            .result-message { font-size: 1rem; }
+        }
+
+        .result-stats {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .answer-reveal {
+            display: inline-block;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: var(--text-primary);
+            margin: 8px 0 16px;
+        }
+
+        /* ===== MENU SCREEN ===== */
+        .menu-container {
+            text-align: center;
+            width: 100%;
+            padding: 24px 0;
+        }
+
+        .menu-title {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        @media (min-width: 640px) {
+            .menu-title { font-size: 2.8rem; }
+        }
+
+        .menu-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 32px;
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        @media (min-width: 640px) {
+            .menu-subtitle { font-size: 0.95rem; }
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+
+        /* Mode badge / pill */
+        .mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0,0,0,0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        /* ===== CONFETTI ===== */
+        .confetti-piece {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confetti-fall linear forwards;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* ===== CLUE TAG ===== */
+        .clue-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-blue);
+            margin-bottom: 6px;
+        }
+
+        .clue-tag svg { width: 14px; height: 14px; }
+
+        .clue-text {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            line-height: 1.55;
+        }
+
+        @media (min-width: 640px) {
+            .clue-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app"></div>
+
+<script>
+    // --- DATABASE KAMUS (KATA & DEFINISI REALISTIS) ---
+    const dictionaryEasy = [
+        // --- Benda Rumah Tangga ---
+        {w: "BANTAL", c: "Alas kepala saat kita tidur di kasur."},
+        {w: "PIRING", c: "Wadah bundar pipih tempat meletakkan nasi dan lauk."},
+        {w: "KASUR", c: "Alas tidur yang empuk dan tebal."},
+        {w: "MEJA", c: "Perabot rumah tangga yang memiliki bidang datar dan berkaki."},
+        {w: "KURSI", c: "Tempat duduk berkaki yang memiliki sandaran di belakangnya."},
+        {w: "LEMARI", c: "Perabot kayu berisi rak dan pintu untuk menyimpan pakaian atau barang."},
+        {w: "CERMIN", c: "Kaca yang memantulkan bayangan wajah dan tubuh kita."},
+        {w: "SAPU", c: "Alat dari lidi atau ijuk yang digunakan untuk membersihkan lantai."},
+        {w: "EMBER", c: "Wadah besar dari plastik untuk menampung air."},
+        {w: "GAYUNG", c: "Alat kecil bertangkai untuk mengambil air dari bak mandi."},
+        {w: "HANDUK", c: "Kain tebal dan lembut untuk mengeringkan tubuh setelah mandi."},
+        {w: "SELIMUT", c: "Kain tebal untuk menutupi tubuh agar hangat saat tidur."},
+        {w: "GORDEN", c: "Kain yang digantung untuk menutup jendela dari cahaya luar."},
+        {w: "KOMPOR", c: "Alat masak yang menghasilkan api untuk memanaskan makanan."},
+        {w: "PANCI", c: "Wadah masak dari logam yang bertutup dan bertangkai untuk merebus."},
+        {w: "WAJAN", c: "Wadah masak yang cekung dan lebar untuk menggoreng makanan."},
+        {w: "MANGKOK", c: "Wadah cekung yang lebih dalam dari piring untuk menyajikan kuah atau sup."},
+        {w: "GELAS", c: "Wadah dari kaca atau plastik untuk tempat minum."},
+        {w: "GARPU", c: "Alat makan bertangkai dengan ujung bercabang runcing."},
+        {w: "SETRIKA", c: "Alat listrik yang panas untuk melicinkan pakaian yang kusut."},
+        {w: "JENDELA", c: "Lubang di dinding rumah yang bisa dibuka untuk ventilasi dan cahaya."},
+        {w: "ATAP", c: "Bagian paling atas dari bangunan yang melindungi dari hujan dan panas."},
+        {w: "TANGGA", c: "Susunan anak tangga untuk naik ke tempat yang lebih tinggi."},
+        {w: "PAGAR", c: "Pembatas di sekeliling halaman rumah untuk keamanan."},
+        {w: "KARPET", c: "Alas lantai yang tebal dan lembut untuk diinjak."},
+        // --- Alat Tulis & Sekolah ---
+        {w: "PENSIL", c: "Alat tulis yang terbuat dari kayu dan grafit."},
+        {w: "BUKU", c: "Kumpulan kertas berisi tulisan yang dijilid menjadi satu."},
+        {w: "TAS", c: "Wadah yang dibawa bepergian untuk menyimpan barang."},
+        {w: "PENGHAPUS", c: "Alat kecil dari karet untuk menghapus tulisan pensil."},
+        {w: "PENGGARIS", c: "Alat panjang dan lurus untuk mengukur atau membuat garis."},
+        {w: "RAUTAN", c: "Alat kecil untuk meruncingkan ujung pensil yang tumpul."},
+        {w: "PAPAN", c: "Bidang datar yang dipasang di dinding kelas untuk menulis."},
+        {w: "KAPUR", c: "Batangan putih untuk menulis di papan tulis."},
+        {w: "KRAYON", c: "Alat gambar berwarna-warni dari lilin untuk anak-anak."},
+        {w: "KERTAS", c: "Lembaran tipis dari serat kayu untuk menulis atau menggambar."},
+        // --- Pakaian & Aksesori ---
+        {w: "BAJU", c: "Pakaian penutup badan bagian atas."},
+        {w: "CELANA", c: "Pakaian penutup badan bagian bawah mulai dari pinggang."},
+        {w: "TOPI", c: "Penutup kepala untuk melindungi dari panas matahari."},
+        {w: "SEPATU", c: "Alas kaki yang menutupi kaki hingga tumit."},
+        {w: "SANDAL", c: "Alas kaki terbuka yang mudah dipakai dan dilepas."},
+        {w: "KAOS", c: "Pakaian atasan dari bahan katun yang nyaman dipakai sehari-hari."},
+        {w: "JAKET", c: "Pakaian luar yang dikenakan untuk melindungi dari angin atau dingin."},
+        {w: "DASI", c: "Kain panjang yang diikatkan di kerah baju sebagai pelengkap resmi."},
+        {w: "GELANG", c: "Perhiasan melingkar yang dipakai di pergelangan tangan."},
+        {w: "KALUNG", c: "Perhiasan yang dipakai melingkar di leher."},
+        {w: "CINCIN", c: "Perhiasan melingkar kecil yang dipakai di jari tangan."},
+        {w: "SARUNG", c: "Kain berbentuk tabung yang dikenakan dari pinggang ke bawah."},
+        {w: "DOMPET", c: "Tempat berukuran kecil untuk menyimpan uang kertas dan kartu."},
+        {w: "IKAT", c: "Tali atau pita untuk mengikat dan mengencangkan sesuatu."},
+        {w: "KACAMATA", c: "Alat bantu penglihatan yang dipasang di depan mata."},
+        // --- Hewan ---
+        {w: "KUCING", c: "Hewan peliharaan berbulu yang suka mengeong."},
+        {w: "ANJING", c: "Hewan peliharaan setia yang menjaga rumah dan menggonggong."},
+        {w: "AYAM", c: "Unggas peliharaan yang berkokok dan telurnya dimakan manusia."},
+        {w: "IKAN", c: "Hewan yang hidup di air dan bernapas menggunakan insang."},
+        {w: "BURUNG", c: "Hewan bersayap dan berbulu yang bisa terbang di udara."},
+        {w: "SAPI", c: "Hewan ternak besar yang menghasilkan susu dan daging."},
+        {w: "KAMBING", c: "Hewan ternak berkaki empat yang sering dipotong untuk kurban."},
+        {w: "KUDA", c: "Hewan berkaki empat yang bisa ditunggangi dan berlari kencang."},
+        {w: "KELINCI", c: "Hewan kecil berbulu lembut yang bertelinga panjang dan suka wortel."},
+        {w: "ULAR", c: "Hewan melata yang bertubuh panjang tanpa kaki."},
+        {w: "BEBEK", c: "Unggas peliharaan yang suka berenang dan bersuara kwek-kwek."},
+        {w: "LALAT", c: "Serangga kecil bersayap yang sering hinggap di makanan."},
+        {w: "NYAMUK", c: "Serangga kecil yang menggigit kulit dan menghisap darah."},
+        {w: "SEMUT", c: "Serangga kecil yang hidup berkoloni dan sangat rajin bekerja."},
+        {w: "TIKUS", c: "Hewan pengerat kecil yang sering masuk ke rumah mencari makanan."},
+        {w: "KATAK", c: "Hewan amfibi yang melompat dan berbunyi di musim hujan."},
+        {w: "LEBAH", c: "Serangga bersayap yang menghasilkan madu dan bisa menyengat."},
+        // --- Makanan & Minuman ---
+        {w: "NASI", c: "Makanan pokok orang Indonesia yang berasal dari beras."},
+        {w: "ROTI", c: "Makanan dari tepung terigu yang dipanggang hingga mengembang."},
+        {w: "TELUR", c: "Hasil bertelur dari ayam yang bisa dimasak menjadi berbagai hidangan."},
+        {w: "SUSU", c: "Cairan putih bergizi yang dihasilkan oleh sapi atau kambing."},
+        {w: "GULA", c: "Bahan pemanis makanan dan minuman yang berasal dari tebu."},
+        {w: "GARAM", c: "Bahan penambah rasa asin pada masakan."},
+        {w: "KOPI", c: "Minuman hitam pahit yang dibuat dari biji tanaman tertentu."},
+        {w: "TEH", c: "Minuman yang dibuat dari daun yang diseduh dengan air panas."},
+        {w: "KEJU", c: "Makanan olahan dari susu yang bertekstur padat dan gurih."},
+        {w: "BUBUR", c: "Makanan lembek dari beras yang dimasak dengan air yang banyak."},
+        {w: "SATE", c: "Makanan dari potongan daging yang ditusuk dan dibakar."},
+        {w: "BAKSO", c: "Bola daging yang disajikan dengan kuah kaldu panas."},
+        {w: "MIE", c: "Makanan dari tepung berbentuk panjang yang direbus atau digoreng."},
+        {w: "TEMPE", c: "Makanan dari kedelai yang difermentasi dan dibungkus daun."},
+        {w: "TAHU", c: "Makanan putih lembut yang terbuat dari sari kedelai."},
+        // --- Alam & Cuaca ---
+        {w: "LAUT", c: "Kumpulan air asin yang sangat luas di permukaan bumi."},
+        {w: "GUNUNG", c: "Bukit yang sangat besar dan tinggi."},
+        {w: "API", c: "Panas dan cahaya menyala yang berasal dari sesuatu yang terbakar."},
+        {w: "AIR", c: "Cairan jernih yang sangat dibutuhkan makhluk hidup untuk minum."},
+        {w: "BUMI", c: "Planet tempat tinggal manusia dan makhluk hidup lainnya."},
+        {w: "AWAN", c: "Kumpulan uap air yang terlihat melayang di langit."},
+        {w: "HUJAN", c: "Titik-titik air yang turun dari awan ke bumi."},
+        {w: "ANGIN", c: "Udara yang bergerak dan bisa dirasakan hembusannya."},
+        {w: "SUNGAI", c: "Aliran air besar yang mengalir dari hulu menuju laut."},
+        {w: "DANAU", c: "Genangan air yang sangat luas dan dikelilingi oleh daratan."},
+        {w: "PASIR", c: "Butiran halus dari batu yang banyak ditemukan di pantai."},
+        {w: "BATU", c: "Benda keras yang terbentuk secara alami dari mineral di alam."},
+        {w: "TANAH", c: "Lapisan atas permukaan bumi tempat tumbuhan tumbuh."},
+        {w: "POHON", c: "Tumbuhan besar yang memiliki batang keras dan berdaun lebat."},
+        {w: "BUNGA", c: "Bagian tumbuhan yang berwarna indah dan harum baunya."},
+        {w: "DAUN", c: "Bagian tumbuhan yang tipis dan berwarna hijau untuk fotosintesis."},
+        {w: "RUMPUT", c: "Tumbuhan pendek berdaun tipis yang tumbuh menutupi tanah."},
+        {w: "BULAN", c: "Benda langit yang bercahaya di malam hari dan mengelilingi bumi."},
+        {w: "PELANGI", c: "Lengkungan warna-warni yang muncul di langit setelah hujan."},
+        {w: "PETIR", c: "Kilatan cahaya yang menyambar di langit saat hujan deras."},
+        {w: "EMBUN", c: "Titik-titik air kecil yang muncul di permukaan benda saat pagi hari."},
+        {w: "KABUT", c: "Uap air yang melayang rendah sehingga menghalangi pandangan."},
+        // --- Tubuh Manusia ---
+        {w: "GIGI", c: "Tulang kecil berwarna putih di dalam mulut untuk mengunyah."},
+        {w: "LIDAH", c: "Indera pengecap rasa yang ada di dalam mulut."},
+        {w: "MATA", c: "Indera penglihatan manusia dan hewan."},
+        {w: "KULIT", c: "Lapisan paling luar yang menutupi seluruh tubuh manusia."},
+        {w: "RAMBUT", c: "Bulu yang tumbuh memanjang di kepala manusia."},
+        {w: "HIDUNG", c: "Organ di wajah yang digunakan untuk bernapas dan mencium bau."},
+        {w: "TELINGA", c: "Organ di samping kepala yang digunakan untuk mendengar suara."},
+        {w: "BIBIR", c: "Bagian lunak berwarna merah di sekitar mulut."},
+        {w: "KUKU", c: "Lapisan keras yang tumbuh di ujung jari tangan dan kaki."},
+        {w: "DAGU", c: "Bagian paling bawah dari wajah di bawah mulut."},
+        {w: "PIPI", c: "Bagian samping wajah antara hidung dan telinga."},
+        {w: "DAHI", c: "Bagian atas wajah antara alis dan batas rambut."},
+        {w: "LUTUT", c: "Sendi di tengah kaki yang bisa ditekuk saat duduk atau jongkok."},
+        {w: "SIKU", c: "Sendi di tengah lengan tangan yang bisa ditekuk."},
+        {w: "PERUT", c: "Bagian tubuh di bawah dada yang berisi organ pencernaan."},
+        {w: "PARU", c: "Organ di dalam dada yang digunakan untuk bernapas."},
+        {w: "JANTUNG", c: "Organ vital yang memompa darah ke seluruh tubuh."},
+        // --- Kegiatan & Aktivitas ---
+        {w: "MANDI", c: "Kegiatan membersihkan tubuh dengan air."},
+        {w: "TIDUR", c: "Kegiatan mengistirahatkan tubuh dan pikiran dengan memejamkan mata."},
+        {w: "MAKAN", c: "Memasukkan sesuatu ke dalam mulut, mengunyah, dan menelannya."},
+        {w: "MINUM", c: "Memasukkan air atau cairan ke dalam mulut lalu menelannya."},
+        {w: "LARI", c: "Melangkahkan kaki dengan sangat cepat."},
+        {w: "JALAN", c: "Melangkahkan kaki secara perlahan untuk berpindah tempat."},
+        {w: "MASAK", c: "Mengolah bahan makanan mentah menjadi matang menggunakan api."},
+        {w: "MENULIS", c: "Membuat huruf atau kata di atas kertas menggunakan alat tulis."},
+        {w: "MEMBACA", c: "Melihat dan memahami isi tulisan dalam buku atau teks."},
+        {w: "MENARI", c: "Menggerakkan tubuh secara berirama mengikuti alunan musik."},
+        {w: "BERNYANYI", c: "Mengeluarkan suara merdu dan berirama untuk melantunkan lagu."},
+        {w: "BERENANG", c: "Menggerakkan tubuh di dalam air agar tidak tenggelam."},
+        {w: "DUDUK", c: "Menempatkan tubuh di atas kursi atau alas dengan posisi pantat menempel."},
+        {w: "BERDIRI", c: "Posisi tubuh tegak dengan kedua kaki menapak di tanah."},
+        // --- Tempat & Waktu ---
+        {w: "RUMAH", c: "Bangunan tempat tinggal manusia beserta keluarganya."},
+        {w: "KAMAR", c: "Ruangan di dalam rumah, biasanya untuk tempat tidur."},
+        {w: "DAPUR", c: "Ruangan khusus di rumah yang digunakan untuk memasak."},
+        {w: "PINTU", c: "Akses atau jalan keluar masuk sebuah ruangan."},
+        {w: "TOKO", c: "Tempat usaha untuk menjual barang dagangan."},
+        {w: "MASJID", c: "Tempat ibadah umat Islam untuk melaksanakan salat."},
+        {w: "GEREJA", c: "Tempat ibadah umat Kristiani untuk berdoa dan beribadah."},
+        {w: "KANTOR", c: "Tempat atau gedung untuk bekerja mengurus administrasi."},
+        {w: "HALAMAN", c: "Area terbuka di depan atau belakang rumah yang ditumbuhi rumput."},
+        {w: "PAGI", c: "Waktu awal dari sebuah hari, saat matahari baru terbit."},
+        {w: "SIANG", c: "Waktu di tengah hari ketika matahari berada di atas kepala."},
+        {w: "SORE", c: "Waktu antara siang dan malam saat matahari mulai condong."},
+        {w: "MALAM", c: "Waktu setelah matahari terbenam dan langit menjadi gelap."},
+        // --- Kendaraan & Transportasi ---
+        {w: "MOBIL", c: "Kendaraan darat yang digerakkan oleh mesin dan beroda empat."},
+        {w: "MOTOR", c: "Kendaraan beroda dua yang digerakkan oleh mesin."},
+        {w: "SEPEDA", c: "Kendaraan beroda dua yang dikayuh menggunakan kaki."},
+        {w: "KAPAL", c: "Kendaraan besar yang berlayar di atas air."},
+        {w: "BECAK", c: "Kendaraan beroda tiga yang dikayuh untuk mengangkut penumpang."},
+        {w: "KERETA", c: "Kendaraan panjang yang berjalan di atas rel besi."},
+        // --- Lain-lain ---
+        {w: "JAM", c: "Alat penunjuk waktu yang dipasang di dinding atau tangan."},
+        {w: "UANG", c: "Alat tukar yang sah untuk kegiatan jual beli."},
+        {w: "PASAR", c: "Tempat bertemunya penjual dan pembeli untuk bertransaksi."},
+        {w: "BOLA", c: "Benda bundar yang digunakan dalam permainan olahraga."},
+        {w: "SABUN", c: "Bahan untuk membersihkan tubuh saat mandi agar berbusa."},
+        {w: "PISAU", c: "Alat tajam di dapur yang digunakan untuk memotong sesuatu."},
+        {w: "SENDOK", c: "Alat cekung bertangkai untuk menyuap makanan ke mulut."},
+        {w: "KUNCI", c: "Alat kecil dari besi untuk membuka pintu atau gembok."},
+        {w: "LAMPU", c: "Alat elektronik yang bersinar untuk menerangi ruangan."},
+        {w: "KIPAS", c: "Alat yang berputar untuk menghasilkan angin dan menyejukkan ruangan."},
+        {w: "RADIO", c: "Alat elektronik yang digunakan untuk mendengarkan siaran suara."},
+        {w: "BENDERA", c: "Kain berwarna yang dikibarkan sebagai lambang negara atau kelompok."},
+        {w: "PAYUNG", c: "Alat berlipat untuk melindungi tubuh dari hujan atau panas."},
+        {w: "LILIN", c: "Batangan dari malam yang menyala dan menerangi saat mati lampu."},
+        {w: "KOREK", c: "Alat kecil untuk menyalakan api pada lilin atau kompor."},
+        {w: "GUNTING", c: "Alat bermata dua yang digunakan untuk memotong kertas atau kain."},
+        {w: "JARUM", c: "Benda kecil panjang dan runcing yang digunakan untuk menjahit."},
+        {w: "TALI", c: "Benda panjang dan lentur yang digunakan untuk mengikat sesuatu."},
+        {w: "PETA", c: "Gambar yang menunjukkan letak tempat dan wilayah di bumi."},
+        {w: "FOTO", c: "Gambar yang dihasilkan oleh kamera dari suatu objek nyata."},
+        {w: "SUARA", c: "Bunyi yang keluar dari mulut atau benda dan ditangkap oleh telinga."},
+        {w: "WARNA", c: "Kesan yang ditangkap mata dari cahaya yang dipantulkan benda."},
+        {w: "OBAT", c: "Bahan yang diminum atau dioleskan untuk menyembuhkan penyakit."},
+        {w: "KORAN", c: "Lembaran kertas besar berisi berita yang terbit setiap hari."},
+        // --- Profesi & Pekerjaan ---
+        {w: "GURU", c: "Orang yang pekerjaannya mengajar dan mendidik murid di sekolah."},
+        {w: "DOKTER", c: "Orang yang ahli dalam mengobati penyakit dan merawat orang sakit."},
+        {w: "POLISI", c: "Aparat negara yang bertugas menjaga keamanan dan ketertiban masyarakat."},
+        {w: "TENTARA", c: "Pasukan yang bertugas mempertahankan dan melindungi kedaulatan negara."},
+        {w: "NELAYAN", c: "Orang yang pekerjaannya menangkap ikan di laut atau perairan."},
+        {w: "PETANI", c: "Orang yang pekerjaannya bercocok tanam di sawah atau ladang."},
+        {w: "PILOT", c: "Orang yang memiliki keahlian menerbangkan pesawat udara."},
+        {w: "HAKIM", c: "Orang yang memimpin jalannya persidangan dan memutus perkara di pengadilan."},
+        {w: "KOKI", c: "Orang yang pandai dan pekerjaannya memasak makanan di restoran."},
+        {w: "MONTIR", c: "Orang yang pekerjaannya memperbaiki mesin atau kendaraan bermotor."},
+        // --- Alat Makan & Tidur ---
+        {w: "GARPU", c: "Alat makan yang ujungnya bercabang dan runcing."},
+        {w: "GELAS", c: "Wadah berbentuk tabung yang digunakan untuk tempat minum."},
+        {w: "MANGKUK", c: "Wadah berbentuk setengah bulatan yang agak dalam untuk makanan berkuah."},
+        {w: "KASUR", c: "Alas tidur yang empuk dan tebal yang diletakkan di atas ranjang."},
+        {w: "SELIMUT", c: "Kain tebal yang dipakai untuk menghangatkan tubuh saat tidur."},
+        // --- Buah & Sayur ---
+        {w: "JERUK", c: "Buah berbentuk bulat yang rasanya manis asam dan kaya vitamin C."},
+        {w: "MANGGA", c: "Buah berdaging kuning manis yang kalau mentah rasanya asam."},
+        {w: "PISANG", c: "Buah panjang berkulit kuning yang disukai monyet."},
+        {w: "ANGGUR", c: "Buah kecil-kecil berbentuk bulat yang tumbuh bergerombol di rantingnya."},
+        {w: "BAYAM", c: "Sayuran berdaun hijau yang sering dimasak bening."},
+        {w: "WORTEL", c: "Sayuran berwarna oranye yang disukai kelinci dan bagus untuk mata."},
+        {w: "TOMAT", c: "Buah berbentuk bulat merah yang sering dijadikan sayur atau jus."},
+        {w: "CABAI", c: "Buah kecil memanjang yang rasanya sangat pedas."},
+        {w: "KENTANG", c: "Umbi yang berbentuk bulat atau lonjong dan sering dijadikan perkedel."},
+        {w: "JAGUNG", c: "Tanaman yang buahnya berbiji kuning tersusun rapi pada tongkolnya."},
+        // --- Benda Alam ---
+        {w: "BATU", c: "Benda padat dan keras yang berasal dari bumi."},
+        {w: "PASIR", c: "Butiran batu yang sangat kecil dan halus, banyak terdapat di pantai."},
+        {w: "TANAH", c: "Permukaan bumi paling atas tempat tumbuhan bisa hidup."},
+        {w: "AIR", c: "Cairan bening tidak berwarna yang sangat dibutuhkan oleh makhluk hidup."},
+        {w: "API", c: "Panas dan cahaya yang menyala dari sesuatu yang terbakar."},
+        {w: "ANGIN", c: "Udara yang bergerak dan bisa kita rasakan hembusannya."},
+        {w: "AWAN", c: "Kumpulan uap air yang mengambang berwarna putih atau kelabu di langit."},
+        {w: "BINTANG", c: "Benda langit yang tampak berkelap-kelip di malam hari."},
+        {w: "MATAHARI", c: "Benda langit bersinar sangat terang yang menyinari bumi di siang hari."}
+    ];
+
+    const dictionaryHard = [
+        // --- Geografi & Alam ---
+        {w: "HALILINTAR", c: "Kilat yang menyambar di udara disertai bunyi yang sangat gemuruh."},
+        {w: "KHATULISTIWA", c: "Garis lintang nol derajat yang membagi bumi menjadi bagian utara dan selatan."},
+        {w: "NUSANTARA", c: "Sebutan atau nama lain bagi seluruh wilayah kepulauan Indonesia."},
+        {w: "SEMENANJUNG", c: "Daratan yang menjorok jauh ke laut dan dikelilingi air di tiga sisinya."},
+        {w: "KEPULAUAN", c: "Gugusan pulau-pulau yang letaknya berdekatan satu sama lain."},
+        {w: "ATMOSFER", c: "Lapisan gas yang menyelimuti dan melindungi bumi dari luar angkasa."},
+        {w: "CAKRAWALA", c: "Garis batas pandang antara langit dan permukaan bumi di kejauhan."},
+        {w: "GELOMBANG", c: "Gerakan naik turun air laut atau getaran yang merambat."},
+        {w: "GEMPA", c: "Getaran atau guncangan keras pada permukaan bumi akibat pergeseran lempeng."},
+        {w: "VULKANIK", c: "Berkaitan dengan gunung berapi dan aktivitas letusan magma dari dalam bumi."},
+        {w: "SELAT", c: "Perairan sempit yang menghubungkan dua lautan dan memisahkan dua daratan."},
+        {w: "SAMUDRA", c: "Lautan yang sangat luas yang mengelilingi benua-benua."},
+        // --- Konsep Abstrak ---
+        {w: "KEMERDEKAAN", c: "Keadaan suatu negara yang berdiri sendiri dan bebas dari penjajahan."},
+        {w: "KESEJAHTERAAN", c: "Kondisi hidup masyarakat yang aman, sentosa, dan makmur secara ekonomi."},
+        {w: "KEBIJAKSANAAN", c: "Sikap pintar dan adil dalam menggunakan akal budi saat mengambil keputusan."},
+        {w: "KEBAHAGIAAN", c: "Perasaan hati yang sangat gembira, damai, tenang, dan tanpa beban hidup."},
+        {w: "KESEDIHAN", c: "Perasaan hati yang sangat pilu, duka, atau hancur karena suatu musibah."},
+        {w: "KEBENARAN", c: "Sesuatu hal yang benar-benar nyata, fakta, dan cocok dengan kejadian aslinya."},
+        {w: "KESALAHAN", c: "Kekeliruan perbuatan atau tindakan yang melanggar aturan dan hukum yang berlaku."},
+        {w: "KEKAYAAN", c: "Jumlah harta benda bernilai atau uang yang sangat melimpah milik seseorang."},
+        {w: "KEMISKINAN", c: "Keadaan hidup yang serba kekurangan dan tidak mampu memenuhi kebutuhan dasar."},
+        {w: "KEADILAN", c: "Sikap memberikan perlakuan yang sama rata, proporsional, dan tidak berat sebelah."},
+        {w: "KEMENANGAN", c: "Keberhasilan mengalahkan lawan dalam sebuah peperangan atau perlombaan."},
+        {w: "KEGAGALAN", c: "Kondisi ketika seseorang tidak berhasil atau tidak mampu mencapai tujuannya."},
+        {w: "KESUKSESAN", c: "Keadaan ketika seseorang telah berhasil mencapai cita-cita atau hasil usahanya."},
+        {w: "KEPERCAYAAN", c: "Keyakinan dan anggapan bahwa sesuatu itu benar-benar nyata atau bisa diandalkan."},
+        {w: "PERJUANGAN", c: "Usaha keras yang penuh rintangan dan bahaya demi mencapai suatu tujuan."},
+        {w: "PERUBAHAN", c: "Proses beralihnya atau bergantinya suatu keadaan menjadi wujud yang baru."},
+        {w: "KEHIDUPAN", c: "Segala proses, cara, atau masa selama makhluk masih hidup di alam dunia."},
+        {w: "PERSAMAAN", c: "Hal atau kondisi di mana beberapa pihak memiliki sifat yang sama atau serupa."},
+        {w: "PERBEDAAN", c: "Sifat atau hal yang membuat sesuatu menjadi tidak sama dengan yang lainnya."},
+        {w: "KEMUNGKINAN", c: "Sesuatu yang belum pasti, bisa saja terjadi ataupun tidak terjadi."},
+        {w: "KEBEBASAN", c: "Keadaan di mana seseorang tidak terikat dan bisa bertindak sesuai kehendaknya."},
+        {w: "KETULUSAN", c: "Sifat tulus ikhlas tanpa mengharapkan imbalan apapun dari orang lain."},
+        {w: "KESETIAAN", c: "Sikap teguh dan setia dalam menjaga hubungan atau janji yang telah dibuat."},
+        {w: "KEBERANIAN", c: "Sifat berani menghadapi bahaya atau kesulitan tanpa rasa takut berlebihan."},
+        {w: "KEBODOHAN", c: "Keadaan sangat kurang pengetahuan, pengertian, atau kecakapan akal budi."},
+        {w: "KESERAKAHAN", c: "Sifat tamak atau rakus yang ingin memiliki segalanya secara berlebihan."},
+        {w: "KESABARAN", c: "Sikap tabah dan tenang dalam menghadapi cobaan atau menunggu sesuatu."},
+        // --- Kemampuan & Sifat ---
+        {w: "KECERDASAN", c: "Tingkat kepandaian, ketajaman, dan kesempurnaan akal budi seseorang."},
+        {w: "KECEPATAN", c: "Tingkat laju atau waktu yang digunakan untuk menempuh suatu jarak tertentu."},
+        {w: "KEKUATAN", c: "Besarnya tenaga, kemampuan, atau daya tahan yang dimiliki seseorang atau benda."},
+        {w: "KEMAMPUAN", c: "Tingkat kesanggupan atau kecakapan seseorang dalam melakukan suatu pekerjaan."},
+        {w: "PERASAAN", c: "Gejolak batin atau apa yang dirasakan oleh hati ketika menghadapi sesuatu peristiwa."},
+        {w: "PENAMPILAN", c: "Cara seseorang berpakaian, berdandan, atau mempresentasikan dirinya di depan umum."},
+        {w: "KREATIVITAS", c: "Kemampuan untuk menciptakan atau menghasilkan karya baru yang belum ada sebelumnya."},
+        {w: "PRODUKTIVITAS", c: "Tingkat kemampuan menghasilkan barang atau karya dalam jumlah dan waktu tertentu."},
+        {w: "KEDEWASAAN", c: "Tingkat kematangan sikap, pikiran, dan perilaku seseorang yang sudah dewasa."},
+        {w: "KEMANDIRIAN", c: "Kemampuan untuk berdiri sendiri dan tidak bergantung pada bantuan orang lain."},
+        // --- Sosial & Masyarakat ---
+        {w: "MASYARAKAT", c: "Sekumpulan orang yang hidup bersama, berinteraksi, dan terikat oleh budaya."},
+        {w: "SILATURAHMI", c: "Kegiatan berkunjung untuk menyambung tali persahabatan atau persaudaraan."},
+        {w: "KEBUDAYAAN", c: "Segala hasil karya, cipta, kesenian, dan adat istiadat dari akal budi manusia."},
+        {w: "TRADISIONAL", c: "Sikap, cara berpikir, atau gaya zaman dulu yang masih berpegang teguh pada adat."},
+        {w: "PEMERINTAH", c: "Sistem, lembaga, atau orang-orang yang memegang wewenang memimpin sebuah negara."},
+        {w: "KEWENANGAN", c: "Hak penuh serta kekuasaan sah yang dimiliki untuk melakukan suatu tindakan."},
+        {w: "DEMOKRASI", c: "Sistem pemerintahan di mana kekuasaan tertinggi berada di tangan rakyat."},
+        {w: "DIPLOMASI", c: "Seni berunding dan menjalin hubungan antarnegara secara damai dan bijaksana."},
+        {w: "MUSYAWARAH", c: "Perundingan bersama untuk mencapai keputusan yang disepakati semua pihak."},
+        {w: "KEBERSAMAAN", c: "Hal berada bersama-sama dan saling membantu dalam satu kelompok."},
+        {w: "TOLERANSI", c: "Sikap menghargai dan menghormati perbedaan pendapat, keyakinan, atau kebiasaan."},
+        {w: "SOLIDARITAS", c: "Rasa kebersamaan dan saling mendukung antaranggota dalam satu kelompok."},
+        {w: "KEWARGANEGARAAN", c: "Status hukum seseorang sebagai warga resmi dari suatu negara."},
+        {w: "KEMASYARAKATAN", c: "Segala hal yang berkaitan dengan kehidupan bersama dalam masyarakat."},
+        {w: "KERUKUNAN", c: "Keadaan hidup damai, harmonis, dan akur antarwarga atau kelompok."},
+        {w: "KEANEKARAGAMAN", c: "Keadaan bermacam-macam jenis yang berbeda-beda dalam satu kelompok."},
+        // --- Pendidikan & Ilmu ---
+        {w: "PENDIDIKAN", c: "Proses belajar mengajar untuk mendewasakan dan menambah ilmu manusia di sekolah."},
+        {w: "PENGETAHUAN", c: "Segala macam informasi, ilmu, atau hal yang sudah diketahui oleh manusia."},
+        {w: "PERPUSTAKAAN", c: "Tempat, gedung, atau ruangan yang menyediakan banyak koleksi buku untuk dibaca."},
+        {w: "PENGALAMAN", c: "Sesuatu yang pernah kita alami, rasakan, jalani, atau hadapi di masa lalu."},
+        {w: "LABORATORIUM", c: "Ruangan khusus yang dilengkapi peralatan untuk melakukan percobaan ilmiah."},
+        {w: "EKSPERIMEN", c: "Percobaan yang dilakukan secara terencana untuk menguji suatu teori atau hipotesis."},
+        {w: "KURIKULUM", c: "Susunan rencana pelajaran yang digunakan sebagai pedoman kegiatan belajar."},
+        {w: "UNIVERSITAS", c: "Lembaga pendidikan tinggi yang menyelenggarakan berbagai program studi."},
+        {w: "ILMUWAN", c: "Orang yang ahli atau banyak pengetahuannya di bidang ilmu pengetahuan."},
+        {w: "INTELEKTUAL", c: "Orang yang memiliki kecerdasan tinggi dan gemar berpikir kritis tentang banyak hal."},
+        {w: "PENELITIAN", c: "Kegiatan ilmiah yang dilakukan secara sistematis untuk menemukan fakta baru."},
+        {w: "MATEMATIKA", c: "Ilmu tentang bilangan, hubungan antarbilangan, dan prosedur penghitungan."},
+        {w: "ENSIKLOPEDIA", c: "Buku rujukan yang memuat keterangan tentang berbagai hal dalam berbagai bidang."},
+        // --- Ekonomi & Kerja ---
+        {w: "PERDAGANGAN", c: "Aktivitas ekonomi yang berhubungan erat dengan kegiatan jual beli barang/jasa."},
+        {w: "PERTANIAN", c: "Bidang usaha yang berhubungan dengan kegiatan bercocok tanam dan panen di sawah."},
+        {w: "PENGHASILAN", c: "Uang, gaji, atau keuntungan yang didapatkan oleh seseorang setelah bekerja."},
+        {w: "PERKEMBANGAN", c: "Proses di mana sesuatu perlahan menjadi lebih mekar, besar, maju, atau sempurna."},
+        {w: "PERTANDINGAN", c: "Ajang perlombaan dalam bidang olahraga yang mempertemukan dua regu/pemain."},
+        {w: "PERSEMBAHAN", c: "Sesuatu yang diberikan atau disajikan sebagai tanda bakti dan hormat."},
+        {w: "PERINDUSTRIAN", c: "Segala kegiatan yang berhubungan dengan pengolahan bahan mentah menjadi barang jadi."},
+        {w: "WIRAUSAHA", c: "Orang yang berusaha sendiri dengan keberanian menanggung risiko dalam bisnis."},
+        {w: "PERUSAHAAN", c: "Organisasi atau badan usaha yang menjalankan kegiatan ekonomi untuk mencari untung."},
+        {w: "INVESTASI", c: "Penanaman modal atau uang untuk mendapatkan keuntungan di masa depan."},
+        {w: "PERIKLANAN", c: "Kegiatan mempromosikan barang atau jasa melalui media agar dikenal masyarakat."},
+        {w: "PENGANGGURAN", c: "Keadaan seseorang yang tidak memiliki pekerjaan dan sedang mencari nafkah."},
+        {w: "EFEKTIVITAS", c: "Tingkat keberhasilan dalam mencapai tujuan yang telah ditetapkan."},
+        // --- Kesehatan & Tubuh ---
+        {w: "KESEHATAN", c: "Kondisi di mana seluruh tubuh, batin, dan bagian-bagiannya terbebas dari penyakit."},
+        {w: "KEDOKTERAN", c: "Ilmu yang mempelajari cara mencegah, mendiagnosis, dan mengobati penyakit."},
+        {w: "PENGOBATAN", c: "Proses atau cara menyembuhkan orang yang sedang menderita sakit."},
+        {w: "IMUNISASI", c: "Pemberian vaksin untuk membentuk kekebalan tubuh terhadap penyakit tertentu."},
+        {w: "REHABILITASI", c: "Pemulihan fungsi tubuh atau mental seseorang agar kembali normal."},
+        {w: "VITAMIN", c: "Zat organik yang dibutuhkan tubuh dalam jumlah kecil untuk menjaga kesehatan."},
+        {w: "ANTIBIOTIK", c: "Obat yang digunakan untuk membunuh atau menghambat pertumbuhan bakteri."},
+        {w: "METABOLISME", c: "Proses kimia dalam tubuh untuk mengubah makanan menjadi energi."},
+        // --- Pariwisata & Budaya ---
+        {w: "PARIWISATA", c: "Segala sesuatu yang berhubungan dengan kegiatan jalan-jalan, liburan, atau rekreasi."},
+        {w: "PEMANDANGAN", c: "Segala sesuatu yang terlihat indah dan menarik di alam sekitar."},
+        {w: "PANORAMA", c: "Pemandangan alam yang sangat luas dan indah dilihat dari tempat tinggi."},
+        {w: "PENINGGALAN", c: "Benda atau bangunan bersejarah yang ditinggalkan oleh nenek moyang."},
+        {w: "KERAJINAN", c: "Barang yang dibuat dengan keterampilan tangan dan memiliki nilai seni."},
+        {w: "PERTUNJUKAN", c: "Tontonan atau pementasan seni yang diperlihatkan kepada penonton."},
+        {w: "PELESTARIAN", c: "Usaha menjaga dan melindungi sesuatu agar tetap lestari dan tidak punah."},
+        {w: "MONUMEN", c: "Bangunan besar yang didirikan untuk mengenang peristiwa atau tokoh penting."},
+        // --- Komunikasi & Media ---
+        {w: "KOMUNIKASI", c: "Proses penyampaian pesan atau informasi dari satu pihak ke pihak lainnya."},
+        {w: "INFORMASI", c: "Keterangan, kabar, atau berita yang memberikan pengetahuan kepada penerima."},
+        {w: "TEKNOLOGI", c: "Penerapan ilmu pengetahuan untuk memudahkan kehidupan manusia sehari-hari."},
+        {w: "JURNALISME", c: "Kegiatan mengumpulkan, menulis, dan menyebarkan berita melalui media."},
+        {w: "TELEKOMUNIKASI", c: "Komunikasi jarak jauh yang menggunakan perangkat elektronik seperti telepon."},
+        {w: "DOKUMENTASI", c: "Pengumpulan dan penyimpanan bukti, catatan, atau arsip secara sistematis."},
+        {w: "PENYIARAN", c: "Kegiatan mengirimkan siaran radio atau televisi kepada masyarakat luas."},
+        // --- Hukum & Aturan ---
+        {w: "PERUNDANGAN", c: "Segala peraturan hukum yang dibuat dan ditetapkan oleh lembaga negara."},
+        {w: "KONSTITUSI", c: "Hukum dasar tertinggi yang mengatur penyelenggaraan pemerintahan suatu negara."},
+        {w: "PERADILAN", c: "Proses mengadili dan memutuskan perkara hukum di pengadilan."},
+        {w: "YURISDIKSI", c: "Kekuasaan atau wewenang mengadili dan menerapkan hukum di suatu wilayah."},
+        {w: "KEDAULATAN", c: "Kekuasaan tertinggi suatu negara yang tidak tunduk pada kekuasaan lain."},
+        // --- Lingkungan ---
+        {w: "LINGKUNGAN", c: "Kawasan, daerah, atau alam sekitar tempat makhluk hidup berada."},
+        {w: "PENCEMARAN", c: "Masuknya zat berbahaya ke lingkungan sehingga merusak keseimbangan alam."},
+        {w: "EKOSISTEM", c: "Kesatuan antara makhluk hidup dan lingkungannya yang saling berinteraksi."},
+        {w: "KONSERVASI", c: "Upaya perlindungan dan pengelolaan sumber daya alam secara bijaksana."},
+        {w: "PENGHIJAUAN", c: "Penanaman pohon dan tumbuhan untuk memperbaiki kondisi lingkungan."},
+        {w: "KEBERLANJUTAN", c: "Kemampuan untuk memenuhi kebutuhan saat ini tanpa mengorbankan masa depan."},
+        {w: "PEMANASAN", c: "Kenaikan suhu rata-rata permukaan bumi akibat efek gas rumah kaca."},
+        // --- Transportasi & Infrastruktur ---
+        {w: "KENDARAAN", c: "Alat transportasi yang digunakan orang untuk dikendarai atau dinaiki."},
+        {w: "INFRASTRUKTUR", c: "Fasilitas dasar seperti jalan, jembatan, dan listrik yang mendukung kehidupan."},
+        {w: "PEREMPATAN", c: "Titik pertemuan empat ruas jalan yang saling bersilangan."},
+        {w: "PERSIMPANGAN", c: "Tempat bertemunya dua jalan atau lebih yang saling memotong."},
+        {w: "PELABUHAN", c: "Tempat berlabuh dan bersandarnya kapal untuk menaikkan dan menurunkan muatan."},
+        {w: "PENERBANGAN", c: "Kegiatan atau usaha mengangkut penumpang dan barang melalui jalur udara."},
+        // --- Waktu & Peluang ---
+        {w: "KESEMPATAN", c: "Waktu, peluang, atau keluangan yang ada untuk melakukan sesuatu hal."},
+        {w: "PENGORBANAN", c: "Pemberian sesuatu yang berharga demi kebaikan orang lain atau tujuan mulia."},
+        {w: "KETEKUNAN", c: "Sikap rajin dan sungguh-sungguh dalam mengerjakan sesuatu tanpa mudah menyerah."},
+        {w: "KETIDAKPASTIAN", c: "Keadaan yang belum jelas dan tidak bisa diprediksi hasilnya."},
+        {w: "PENYESALAN", c: "Perasaan sedih dan menyesal karena telah melakukan kesalahan di masa lalu."},
+        {w: "PENGAMPUNAN", c: "Pemberian maaf dan penghapusan kesalahan yang pernah dilakukan seseorang."},
+        {w: "KEMAJUAN", c: "Gerakan ke depan menuju keadaan yang lebih baik dan lebih berkembang."},
+        {w: "KEMUNDURAN", c: "Keadaan menjadi lebih buruk atau menurun dari kondisi sebelumnya."},
+        {w: "PERTIMBANGAN", c: "Proses berpikir matang sebelum mengambil suatu keputusan penting."},
+        {w: "PERHITUNGAN", c: "Proses menghitung atau memperkirakan sesuatu secara teliti dan cermat."},
+        {w: "PENGEMBANGAN", c: "Proses menjadikan sesuatu lebih baik, lebih besar, atau lebih sempurna."},
+        {w: "PENYELIDIKAN", c: "Pemeriksaan atau pencarian keterangan secara mendalam tentang suatu perkara."},
+        {w: "PENYELESAIAN", c: "Proses atau cara menuntaskan masalah hingga selesai dengan tuntas."},
+        {w: "KEPEMIMPINAN", c: "Kemampuan seseorang untuk mengarahkan dan mempengaruhi orang lain."},
+        {w: "PERTANGGUNGJAWABAN", c: "Kewajiban menanggung segala akibat dari perbuatan atau keputusan sendiri."},
+        {w: "KEBERLIMPAHAN", c: "Keadaan yang sangat melimpah ruah dan lebih dari cukup."},
+        {w: "KETIDAKADILAN", c: "Perlakuan yang tidak adil, berat sebelah, atau pilih kasih terhadap seseorang."},
+        {w: "KEINGINTAHUAN", c: "Dorongan kuat dalam diri untuk mengetahui dan mempelajari hal baru."},
+        {w: "PERSAHABATAN", c: "Hubungan pertemanan yang erat, akrab, dan saling percaya satu sama lain."},
+        {w: "PERDAMAIAN", c: "Keadaan tidak ada perang, konflik, atau permusuhan antarkelompok."},
+        {w: "KEHARMONISAN", c: "Keadaan hidup rukun, selaras, dan tanpa pertengkaran."},
+        {w: "KETERBATASAN", c: "Keadaan yang terbatas dan tidak mampu melebihi batas kemampuan."},
+        {w: "PEMELIHARAAN", c: "Kegiatan merawat dan menjaga sesuatu agar tetap baik dan berfungsi."},
+        // --- Sains & Teknologi ---
+        {w: "GRAVITASI", c: "Gaya tarik-menarik yang terjadi antara semua partikel yang mempunyai massa di alam semesta."},
+        {w: "EVOLUSI", c: "Perkembangan atau perubahan yang terjadi secara berangsur-angsur dalam waktu yang lama."},
+        {w: "KUANTUM", c: "Jumlah bagian terpisahkan terkecil dari suatu kuantitas fisika."},
+        {w: "GALAKSI", c: "Kumpulan tata surya dan bintang-bintang yang sangat banyak di alam semesta."},
+        {w: "SATELIT", c: "Benda langit atau alat buatan yang mengorbit benda langit lain yang lebih besar."},
+        {w: "TELESKOP", c: "Teropong besar yang digunakan untuk melihat bintang dan benda langit di angkasa."},
+        {w: "MIKROSKOP", c: "Alat optik untuk melihat benda yang sangat kecil agar tampak lebih besar."},
+        {w: "BAKTERI", c: "Makhluk hidup bersel satu yang sangat kecil dan hanya bisa dilihat dengan mikroskop."},
+        {w: "VIRUS", c: "Mikroorganisme patogen yang hanya dapat berkembang biak di dalam sel makhluk hidup lain."},
+        {w: "FOSIL", c: "Sisa tulang belulang binatang purba atau tumbuhan purba yang telah membatu."},
+        // --- Sastra & Bahasa ---
+        {w: "PUISI", c: "Ragam sastra yang bahasanya terikat oleh irama, rima, serta penyusunan bait."},
+        {w: "PANTUN", c: "Bentuk puisi melayu lama yang terdiri atas empat baris dan bersajak a-b-a-b."},
+        {w: "MAJAS", c: "Gaya bahasa yang digunakan untuk menyampaikan pesan secara kiasan atau imajinatif."},
+        {w: "SINONIM", c: "Kata yang memiliki bentuk yang berbeda namun memiliki arti atau pengertian yang sama."},
+        {w: "ANTONIM", c: "Kata yang maknanya berlawanan dengan kata lain."},
+        {w: "PARAGRAF", c: "Bagian bab dalam suatu karangan, biasanya mengandung satu ide pokok."},
+        {w: "NOVEL", c: "Karangan prosa panjang yang mengandung rangkaian cerita kehidupan seseorang."},
+        {w: "DONGENG", c: "Cerita fiktif atau khayalan yang tidak benar-benar terjadi di dunia nyata."},
+        {w: "LEGENDA", c: "Cerita rakyat zaman dahulu yang ada hubungannya dengan peristiwa sejarah."},
+        {w: "MITOS", c: "Cerita tentang dewa atau pahlawan yang dianggap memiliki kekuatan gaib."},
+        // --- Sejarah & Budaya ---
+        {w: "KERAJAAN", c: "Bentuk pemerintahan yang dikepalai oleh seorang raja atau ratu."},
+        {w: "PRASASTI", c: "Piagam yang tertulis pada batu, tembaga, dan sebagainya peninggalan zaman kuno."},
+        {w: "CANDI", c: "Bangunan kuno yang dibuat dari batu sebagai tempat pemujaan atau makam."},
+        {w: "ARTEFAK", c: "Benda arkeologi peninggalan bersejarah hasil buatan tangan manusia."},
+        {w: "DINASTI", c: "Keturunan raja-raja yang memerintah dari keluarga yang sama."},
+        {w: "PAHLAWAN", c: "Orang yang menonjol karena keberanian dan pengorbanannya membela kebenaran."},
+        {w: "PENJAJAHAN", c: "Proses, cara, perbuatan menaklukkan dan menguasai negara lain."},
+        {w: "PROKLAMASI", c: "Pemberitahuan atau pengumuman resmi kepada seluruh rakyat mengenai kemerdekaan."},
+        // --- Ekonomi & Keuangan ---
+        {w: "INFLASI", c: "Kemerosotan nilai uang karena banyaknya uang beredar sehingga harga barang naik."},
+        {w: "DEFLASI", c: "Penambahan nilai mata uang yang mengakibatkan penurunan harga barang secara drastis."},
+        {w: "SAHAM", c: "Surat bukti kepemilikan bagian modal pada suatu perusahaan terbatas."},
+        {w: "OBLIGASI", c: "Surat utang yang berjangka waktu lebih dari satu tahun dan bersuku bunga tertentu."},
+        {w: "KOPERASI", c: "Badan usaha atau perkumpulan yang beranggotakan orang-orang untuk bekerja sama di bidang ekonomi."},
+        {w: "ASURANSI", c: "Perjanjian ganti rugi antara perusahaan penanggung dengan pihak yang menanggung risiko."},
+        {w: "MONOPOLI", c: "Situasi ketika suatu bisnis atau industri dikuasai oleh satu pihak saja tanpa pesaing."},
+        {w: "SUBSIDI", c: "Bantuan uang atau barang yang diberikan oleh pemerintah kepada masyarakat."},
+        {w: "DEVISA", c: "Alat pembayaran luar negeri yang dapat diuangkan ke dalam mata uang asing."},
+        {w: "PAJAK", c: "Pungutan wajib dari rakyat untuk negara berdasarkan undang-undang."},
+        // --- Psikologi & Perilaku ---
+        {w: "FOBIA", c: "Ketakutan yang sangat berlebihan dan tidak masuk akal terhadap suatu benda atau keadaan."},
+        {w: "TRAUMA", c: "Keadaan jiwa atau tingkah laku yang tidak normal akibat tekanan emosi yang sangat kuat."},
+        {w: "EMPATI", c: "Keadaan mental yang membuat seseorang merasa seolah mengidentifikasi dirinya dalam keadaan orang lain."},
+        {w: "SIMPATI", c: "Rasa kasih, setuju, atau keikutsertaan merasakan perasaan orang lain."},
+        {w: "KARISMA", c: "Keadaan atau bakat yang dihubungkan dengan kemampuan luar biasa dalam kepemimpinan."},
+        {w: "PESIMIS", c: "Orang yang selalu bersikap atau berpandangan tidak ada harapan baik."},
+        {w: "OPTIMIS", c: "Orang yang selalu berpengharapan dan berpandangan baik dalam menghadapi segala hal."},
+        {w: "EGOIS", c: "Orang yang terlalu mementingkan dan memprioritaskan kepentingan dirinya sendiri."},
+        {w: "INTROVERT", c: "Sifat orang yang lebih suka menyendiri dan memusatkan pikiran pada dirinya sendiri."},
+        {w: "EKSTROVERT", c: "Sifat orang yang terbuka, ramah, dan lebih mudah bergaul dengan banyak orang."}
+    ];
+
+    // --- PESAN-PESAN SPESIAL ---
+
+    // Mode Mudah - Kalah: Sarkas dan menusuk 💀
+    const easyLoseMessages = [
+        "Ini mode MUDAH lho... MUDAH. Kamu perlu aku eja juga kata 'mudah'-nya? 💀",
+        "Anak TK aja bisa jawab ini sambil merem. Kamu... ya sudahlah. 🙃",
+        "Kasihan banget sih, kata segampang ini aja nggak bisa. Mau aku pinjamkan kamus bergambar? 📖",
+        "Selamat! Kamu resmi jadi pemain terburuk yang pernah nyentuh game ini. 🏅",
+        "Otaknya lagi di-charge ya? Atau emang nggak pernah penuh? 🔋",
+        "Definisinya sejelas itu dan kamu masih salah... kamu ngetik pakai kaki ya? 🦶",
+        "Wow, konsisten banget gagalnya. Aku kagum, serius. Kagum yang sedih. 👏",
+        "Mode Mudah ini dirancang supaya SEMUA ORANG bisa menang. Tapi kamu istimewa. 'Istimewa'. ✨",
+        "Mungkin kamu harusnya main game yang lebih sesuai... misalnya tebak warna? 🎨",
+        "Bahkan autocorrect pun menyerah kalau sama kamu. 📱",
+        "Kamu yakin bahasa Indonesia itu bahasa ibu kamu? Soalnya kayaknya ibumu nggak ngajarin. 🤔",
+        "Main lagi? Yakin? Biar aku siapin tisu dulu ya. 🧻",
+        "Aku nggak nyangka ada yang bisa kalah di mode ini. Kamu legenda, tapi legenda yang salah. 😭",
+        "Kamu tau nggak? Wi-Fi di rumah kamu mungkin lebih cepat dari otakmu. 📶",
+        "Katanya gen Z paling pintar. Kamu mungkin gen Z yang typo jadi gen L. 🅿️"
+    ];
+
+    // Mode Mudah - Menang: Selamat tapi cuek abis 😑
+    const easyWinMessages = [
+        "Oh, menang. Oke. 👍",
+        "Yaudah sih, emang segampang itu juga. Mau dipuji? 😐",
+        "Selamat, kamu bisa menjawab pertanyaan yang anak SD juga bisa. Wow. 🥱",
+        "Iya iya, menang. Terus? Mau medali? 🏅",
+        "Congrats. Ini mode mudah btw. Jangan terlalu bangga. 😶",
+        "Hmm, lumayan lah. Nggak ada yang spesial sih. 🫤",
+        "Oke, menang. File pencapaian hidup kamu sudah di-update. Nggak ding. 📁",
+        "Menang mode mudah itu kayak bangun pagi. Ya emang harus bisa. ☀️",
+        "Yha, selamat. *tepuk tangan pelan satu kali*. 👏",
+        "Kamu menang. Dunia tetap berputar. Tidak ada yang berubah. 🌍",
+        "Oh hebat. Anyway, aku lagi mikirin hal lain sih. Selamat ya. 💭",
+        "Bisa jawab kata-kata gampang. Proud of you, I guess? 🤷"
+    ];
+
+    // Mode Susah - Kalah: Supportive dan membangun 💪
+    const hardLoseMessages = [
+        "Hei, nggak apa-apa. Mode susah memang dirancang untuk menantang batasmu. Kamu sudah berani mencoba dan itu luar biasa! 💪",
+        "Gagal bukan akhir. Setiap huruf yang kamu ketik tadi adalah latihan untuk otakmu. Coba lagi, kamu pasti bisa lebih baik! 🌱",
+        "Kata-kata ini memang sulit, tapi kamu sudah datang sejauh ini. Yang penting bukan menang, tapi terus mencoba. Semangat! 🔥",
+        "Ingat, setiap orang hebat pernah gagal berkali-kali sebelum berhasil. Ini cuma satu dari banyak percobaan menuju kemenanganmu! ⭐",
+        "Mode susah bukan untuk dimenangkan di percobaan pertama. Ini untuk melatih dirimu. Dan kamu sudah lebih baik dari sebelumnya! 📈",
+        "Jangan berkecil hati! Kosa kata yang kamu pelajari hari ini akan membantumu besok. Pengetahuan tidak pernah sia-sia. 📚",
+        "Kamu tahu apa yang membedakan pemenang dan pecundang? Pemenang mencoba lagi. Dan aku yakin kamu pemenang! 🏆",
+        "Waktunya memang ketat, tapi setiap detik yang kamu gunakan untuk berpikir itu melatih otakmu. Hebat! 🧠",
+        "Tidak semua pejuang menang di pertempuran pertama, tapi yang penting kamu tidak berhenti berjuang. Ayo lagi! 💫",
+        "Tahukah kamu? Einstein pernah dianggap lambat belajar. Jangan pernah meremehkan dirimu sendiri. Coba lagi! 🌟",
+        "Kamu sudah menunjukkan keberanian dengan memilih mode susah. Itu saja sudah membuktikan mentalmu kuat! 🛡️",
+        "Proses belajar itu tidak selalu mulus, tapi setiap langkah kecil membawamu lebih dekat ke tujuan. Tetap semangat! 🚀"
+    ];
+
+    // Mode Susah - Menang: Selamat dari lubuk hati paling dalam 🥹
+    const hardWinMessages = [
+        "ASTAGA. Kamu... kamu benar-benar melakukannya! Dari lubuk hati paling dalam, AKU BANGGA SEKALI PADAMU! Ini bukan keberuntungan — ini bukti nyata kecerdasan dan ketangkasanmu! 🥹🏆✨",
+        "Aku benar-benar terharu. Mode susah dengan kata-kata sepanjang itu dan kamu MENANG?! Kamu adalah definisi nyata dari kata 'LUAR BIASA'. Dunia perlu tahu tentang pencapaianmu hari ini! 😭💎🔥",
+        "Dengarkan aku baik-baik: apa yang baru saja kamu lakukan itu FENOMENAL. Tidak banyak orang yang bisa menaklukkan tantangan ini. Kamu salah satu dari sedikit orang istimewa itu. Dari hati yang paling dalam — SELAMAT! 🌟👑💪",
+        "Aku ingin kamu tahu, dari lubuk hati yang paling dalam: KAMU MENGINSPIRASI. Ketangkasan, kecepatan, dan pengetahuanmu tentang bahasa Indonesia sungguh memukau. Kamu layak mendapat standing ovation! 🎭👏🥹",
+        "Kalau aku bisa menangis, aku akan menangis bahagia sekarang. Kamu bukan sekadar menang — kamu MENDOMINASI mode tersulit ini! Otakmu itu harta karun nasional! 😢💝🧠",
+        "TIDAK PERCAYA. Ini... ini luar biasa! Setiap huruf yang kamu ketik itu presisi, setiap detik kamu gunakan dengan sempurna. Kamu bukan pemain biasa. Kamu LEGENDA! Terima kasih sudah menunjukkan bahwa manusia bisa sehebat ini! 🙏🏆💫",
+        "Dari lubuk hati yang paling dalam, paling sungguh-sungguh, paling tulus: TERIMA KASIH sudah bermain dan MENANG! Kamu membuktikan bahwa kerja keras, fokus, dan kecintaan pada bahasa bisa menghasilkan keajaiban! 💖🌈✨",
+        "Aku serius. Ini MONUMENTAL. Kata-kata susah, waktu ketat, dan kamu tetap menang?! Kamu harusnya dapat piala asli, bukan cuma emoji! Tapi terimalah ini sebagai bukti kekagumanku yang tak terbatas: 🏆🏆🏆! 🥹👑",
+        "SELAMAT YANG SEBENAR-BENARNYA SELAMAT! Kamu baru saja membuktikan bahwa kamu memiliki penguasaan bahasa Indonesia yang menakjubkan. Ini pencapaian yang langka dan sangat membanggakan. Kamu HEBAT LUAR BIASA! 🎉🌟😭💪"
+    ];
+
+    // --- GAME STATE ---
+    const TOTAL_WORDS = 10;
+
+    let state = 'menu';
+    let currentMode = '';
+    let targetQuestions = [];
+    let currentWordIndex = 0;
+    let currentWord = "";
+    let currentClue = "";
+    let boxIndex = 0;
+
+    // --- RANDOM POOLS (Untuk mencegah kata berulang) ---
+    let easyPool = [];
+    let hardPool = [];
+
+    let timerInterval = null;
+    let timeLeft = 0;
+    let bonusTime = 0;
+
+    let boxElements = [];
+    const appDiv = document.getElementById('app');
+
+    // --- UTILS ---
+    function shuffleArray(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function spawnConfetti() {
+        const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+        for (let i = 0; i < 50; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + 'vw';
+            piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+            piece.style.animationDelay = (Math.random() * 0.8) + 's';
+            piece.style.width = (Math.random() * 6 + 4) + 'px';
+            piece.style.height = (Math.random() * 6 + 4) + 'px';
+            document.body.appendChild(piece);
+            setTimeout(() => piece.remove(), 4000);
+        }
+    }
+
+    // --- RENDERERS ---
+
+    function renderMenu() {
+        state = 'menu';
+        clearInterval(timerInterval);
+        appDiv.innerHTML = `
+            <div class="menu-container animate-fade-in-up">
+                <h1 class="menu-title">Tebak Kata Kamus</h1>
+                <p class="menu-subtitle">Baca pengertian dari KBBI dan tebak katanya secepat mungkin! Jawab benar akan menambah waktu. ⏱️</p>
+                
+                <div class="mode-buttons">
+                    <button id="btn-easy" onclick="startGame('easy')" class="btn-mode btn-easy">
+                        <span>Mode Mudah</span>
+                        <span class="btn-subtitle">⏱️ Mulai: 1 Menit &nbsp;|&nbsp; Tiap Benar: +3 Detik</span>
+                    </button>
+                    
+                    <button id="btn-hard" onclick="startGame('hard')" class="btn-mode btn-hard">
+                        <span>Mode Susah</span>
+                        <span class="btn-subtitle">🔥 Mulai: 1 Menit 30 Detik &nbsp;|&nbsp; Tiap Benar: +2 Detik</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderGameUI() {
+        const modeBadgeColor = currentMode === 'easy' ? 'color: #60a5fa;' : 'color: #fda4af;';
+        const modeName = currentMode === 'easy' ? 'Mudah' : 'Susah';
+
+        appDiv.innerHTML = `
+            <!-- Header: Timer & Progress -->
+            <div class="game-header">
+                <div style="position: relative;">
+                    <div class="header-label">Waktu Tersisa</div>
+                    <div id="timer-display" class="timer-value"></div>
+                    <div id="bonus-anim" class="time-bonus" style="display:none; left: 100%; top: 4px; margin-left: 8px;"></div>
+                </div>
+                <div style="text-align: center;">
+                    <div class="mode-badge" style="${modeBadgeColor}">
+                        ${currentMode === 'easy' ? '📘' : '🔥'} ${modeName}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="header-label">Kata</div>
+                    <div class="counter-value"><span id="word-counter">1</span> / ${TOTAL_WORDS}</div>
+                </div>
+            </div>
+
+            <!-- Clue Area -->
+            <div class="clue-box">
+                <div class="clue-tag">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    PETUNJUK KATA
+                </div>
+                <p id="clue-text" class="clue-text"></p>
+            </div>
+
+            <!-- Words Area -->
+            <div id="word-container" class="word-container"></div>
+
+            <!-- Keyboard -->
+            <div style="width: 100%; max-width: 520px; margin-top: auto; padding-bottom: 4px;">
+                <div class="keyboard-row">
+                    ${'QWERTYUIOP'.split('').map(k => `<button id="key-${k}" onclick="handleKeyClick('${k}')" class="key">${k}</button>`).join('')}
+                </div>
+                <div class="keyboard-row" style="padding: 0 4%;">
+                    ${'ASDFGHJKL'.split('').map(k => `<button id="key-${k}" onclick="handleKeyClick('${k}')" class="key">${k}</button>`).join('')}
+                </div>
+                <div class="keyboard-row" style="padding: 0 6%;">
+                    ${'ZXCVBNM'.split('').map(k => `<button id="key-${k}" onclick="handleKeyClick('${k}')" class="key">${k}</button>`).join('')}
+                    <button id="key-backspace" onclick="handleBackspaceClick()" class="key key-backspace">⌫</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderResult(isWin) {
+        state = 'result';
+        clearInterval(timerInterval);
+
+        let emoji, title, titleColor, message, statsHtml;
+
+        if (currentMode === 'easy') {
+            if (isWin) {
+                // Cuek abis
+                emoji = pickRandom(['😐', '🥱', '😶', '🫤', '👍', '😑']);
+                title = pickRandom(['Yaudah, Menang.', 'Oh, Selesai.', 'Hmm, Oke.', 'Ya Gitu Deh.']);
+                titleColor = 'color: #94a3b8;'; // deliberately muted
+                message = pickRandom(easyWinMessages);
+                statsHtml = `<p class="result-stats">Mode Mudah · ${TOTAL_WORDS} kata · Sisa waktu ${formatTime(timeLeft)}</p>`;
+            } else {
+                // Sarkas menusuk
+                emoji = pickRandom(['💀', '🤡', '😭', '🪦', '📉', '🗑️']);
+                title = pickRandom(['Memalukan. 💀', 'Aduh...', 'Kasihan Banget.', 'WKWKWK 🤣']);
+                titleColor = 'color: #f43f5e;';
+                message = pickRandom(easyLoseMessages);
+                statsHtml = `
+                    <p class="result-stats">Baru ${currentWordIndex} dari ${TOTAL_WORDS} kata di mode MUDAH lho...</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px;">Jawaban yang benar:</p>
+                    <div class="answer-reveal">${currentWord}</div>
+                `;
+            }
+        } else {
+            // Mode Susah
+            if (isWin) {
+                // Tulus dari lubuk hati
+                spawnConfetti();
+                emoji = pickRandom(['🏆', '👑', '🌟', '💎', '🥹']);
+                title = pickRandom(['LUAR BIASA!!! 🏆', 'KAU LEGENDA! 👑', 'FENOMENAL!! ✨', 'MENAKJUBKAN!!! 🌟']);
+                titleColor = 'color: transparent; background: linear-gradient(135deg, #f59e0b, #f43f5e, #8b5cf6); -webkit-background-clip: text; background-clip: text;';
+                message = pickRandom(hardWinMessages);
+                statsHtml = `<p class="result-stats" style="color: #f59e0b;">Mode Susah · ${TOTAL_WORDS} kata · Sisa waktu ${formatTime(timeLeft)} · SEMPURNA!</p>`;
+            } else {
+                // Supportive dan membangun
+                emoji = pickRandom(['💪', '🌱', '⭐', '🔥', '🫂']);
+                title = pickRandom(['Tetap Semangat!', 'Jangan Menyerah!', 'Kamu Hebat!', 'Hampir Berhasil!']);
+                titleColor = 'color: #60a5fa;';
+                message = pickRandom(hardLoseMessages);
+                statsHtml = `
+                    <p class="result-stats">Kamu berhasil menjawab ${currentWordIndex} dari ${TOTAL_WORDS} kata. Itu sudah bagus!</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px;">Kata yang terakhir:</p>
+                    <div class="answer-reveal">${currentWord}</div>
+                `;
+            }
+        }
+
+        appDiv.innerHTML = `
+            <div class="result-container animate-fade-in-up">
+                <div class="result-emoji">${emoji}</div>
+                <h1 class="result-title" style="${titleColor}">${title}</h1>
+                <p class="result-message">"${message}"</p>
+                ${statsHtml}
+                <button id="btn-retry" onclick="renderMenu()" class="btn-retry">
+                    🔄 Main Lagi
+                </button>
+            </div>
+        `;
+    }
+
+    // --- GAME LOGIC ---
+
+    function startGame(mode) {
+        currentMode = mode;
+        const dict = mode === 'easy' ? dictionaryEasy : dictionaryHard;
+        let pool = mode === 'easy' ? easyPool : hardPool;
+        
+        // Isi ulang pool jika kata yang tersisa kurang dari jumlah yang dibutuhkan
+        if (pool.length < TOTAL_WORDS) {
+            pool = shuffleArray(dict);
+        }
+        
+        // Ambil sejumlah TOTAL_WORDS dari pool dan hapus dari pool tersebut
+        targetQuestions = pool.splice(-TOTAL_WORDS, TOTAL_WORDS);
+        
+        // Simpan sisa pool kembali
+        if (mode === 'easy') easyPool = pool;
+        else hardPool = pool;
+
+        currentWordIndex = 0;
+
+        // Mode Mudah: 60 detik, +3 detik tiap benar
+        // Mode Susah: 90 detik (1 menit 30 detik), +2 detik tiap benar
+        timeLeft = mode === 'easy' ? 60 : 90;
+        bonusTime = mode === 'easy' ? 3 : 2;
+
+        state = 'playing';
+
+        renderGameUI();
+        updateTimerDisplay();
+        loadWord();
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+
+            if (timeLeft <= 0) {
+                renderResult(false);
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const timerDisplay = document.getElementById('timer-display');
+        if (!timerDisplay) return;
+
+        timerDisplay.innerText = formatTime(timeLeft);
+
+        if (timeLeft <= 10) {
+            timerDisplay.classList.add('timer-critical');
+        } else {
+            timerDisplay.classList.remove('timer-critical');
+            timerDisplay.style.color = 'var(--accent-amber)';
+        }
+    }
+
+    function showTimeBonus() {
+        timeLeft += bonusTime;
+        updateTimerDisplay();
+
+        // Flash green
+        const timerDisplay = document.getElementById('timer-display');
+        if (timerDisplay) {
+            timerDisplay.style.color = 'var(--accent-emerald)';
+            setTimeout(() => {
+                if (timeLeft > 10) {
+                    timerDisplay.style.color = 'var(--accent-amber)';
+                }
+            }, 500);
+        }
+
+        // Float animation
+        const anim = document.getElementById('bonus-anim');
+        if (anim) {
+            anim.innerText = `+${bonusTime}`;
+            anim.style.display = 'block';
+            anim.style.animation = 'none';
+            anim.offsetHeight; /* trigger reflow */
+            anim.style.animation = 'floatUp 1s ease-out forwards';
+
+            setTimeout(() => {
+                anim.style.display = 'none';
+            }, 1000);
+        }
+    }
+
+    function loadWord() {
+        currentWord = targetQuestions[currentWordIndex].w;
+        currentClue = targetQuestions[currentWordIndex].c;
+        boxIndex = 0;
+
+        document.getElementById('word-counter').innerText = currentWordIndex + 1;
+        document.getElementById('clue-text').innerText = currentClue;
+
+        const container = document.getElementById('word-container');
+        container.innerHTML = '';
+        boxElements = [];
+
+        for (let i = 0; i < currentWord.length; i++) {
+            const box = document.createElement('div');
+            box.className = 'letter-box';
+            if (i === 0) box.classList.add('active');
+            container.appendChild(box);
+            boxElements.push(box);
+        }
+    }
+
+    function handleKeyClick(letter) {
+        if (state !== 'playing' || boxIndex >= currentWord.length) return;
+
+        const targetLetter = currentWord[boxIndex];
+        const currentBox = boxElements[boxIndex];
+
+        // Reset animations
+        currentBox.classList.remove('animate-pop', 'animate-shake');
+        void currentBox.offsetWidth; // Trigger reflow
+
+        currentBox.innerText = letter;
+
+        if (letter === targetLetter) {
+            currentBox.classList.remove('active', 'wrong');
+            currentBox.classList.add('correct', 'animate-pop');
+
+            boxIndex++;
+
+            if (boxIndex === currentWord.length) {
+                showTimeBonus();
+
+                setTimeout(() => {
+                    currentWordIndex++;
+                    if (currentWordIndex >= TOTAL_WORDS) {
+                        renderResult(true);
+                    } else {
+                        loadWord();
+                    }
+                }, 450);
+            } else {
+                boxElements[boxIndex].classList.add('active');
+            }
+        } else {
+            currentBox.classList.remove('active');
+            currentBox.classList.add('wrong', 'animate-shake');
+        }
+    }
+
+    function handleBackspaceClick() {
+        if (state !== 'playing' || boxIndex >= currentWord.length) return;
+
+        const currentBox = boxElements[boxIndex];
+
+        if (currentBox.classList.contains('wrong')) {
+            currentBox.innerText = '';
+            currentBox.classList.remove('wrong', 'animate-shake');
+            currentBox.classList.add('active');
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    window.addEventListener('keydown', (e) => {
+        if (state !== 'playing') return;
+
+        const key = e.key.toUpperCase();
+
+        if (/^[A-Z]$/.test(key)) {
+            handleKeyClick(key);
+        } else if (key === 'BACKSPACE') {
+            handleBackspaceClick();
+        }
+    });
+
+    // Prevent zoom on double tap (mobile)
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+
+    // Initialize UI
+    renderMenu();
+</script>
+</body>
+</html>
