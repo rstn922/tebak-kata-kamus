@@ -616,7 +616,28 @@
         @media (min-width: 640px) {
             .clue-text { font-size: 1rem; }
         }
-    </style>
+    
+.shake-screen {
+    animation: screenShake 4s infinite;
+}
+@keyframes screenShake {
+    0% { transform: translate(0, 0); }
+    5% { transform: translate(-2px, 1px); }
+    10% { transform: translate(2px, -2px); }
+    15% { transform: translate(-3px, 0); }
+    20% { transform: translate(0, 0); }
+    100% { transform: translate(0, 0); }
+}
+.timer-fire {
+    color: #ef4444 !important;
+    text-shadow: 0 -2px 4px #dc2626, 0 -4px 10px #f97316, 0 -8px 20px #fbbf24 !important;
+    animation: burn 0.3s infinite alternate;
+}
+@keyframes burn {
+    0% { transform: scale(1); text-shadow: 0 -2px 4px #dc2626, 0 -4px 10px #f97316; }
+    100% { transform: scale(1.1); text-shadow: 0 -4px 8px #dc2626, 0 -8px 15px #f97316, 0 -12px 25px #fbbf24; }
+}
+</style>
 </head>
 <body>
 
@@ -1412,6 +1433,16 @@
     ];
 
     // Mode Neraka - Kalah: Hinaan yang menjatuhkan mental
+        const dictionaryJudgment = [
+        { w: 'TIMEKEEPER', c: 'He who watches the sands fall but cannot stop them.' },
+        { w: 'OMNIPRESENT', c: 'Di mana-mana, yet nowhere to be seen.' },
+        { w: 'PANDEMONIUM', c: 'The capital of Hell, di mana suara tak bermakna.' },
+        { w: 'ETERNITY', c: 'A circle with no end, hukuman tanpa batas waktu.' },
+        { w: 'DOOMSDAY', c: 'The final chapter, ketika langit runtuh.' },
+        { w: 'SILHOUETTE', c: 'A shadow of the past, tanpa wajah tanpa suara.' },
+        { w: 'MELANCHOLIA', c: 'A deep dark sadness, tenggelam dalam lautan duka.' }
+    ];
+
     const hellLoseMessages = [
         "Kekalahan yang sangat bisa diprediksi. Otakmu memang tidak dirancang untuk menangani beban seberat ini.",
         "Menyedihkan. Aku bahkan merasa bersalah telah membiarkan orang sepertimu mencoba mode ini.",
@@ -1496,7 +1527,24 @@
 
     function renderMenu() {
         state = 'menu';
-        clearInterval(timerInterval);
+        
+        const winEasy = localStorage.getItem('win_easy') === 'true';
+        const winHard = localStorage.getItem('win_hard') === 'true';
+        const winHell = localStorage.getItem('win_hell') === 'true';
+        const isJudgmentUnlocked = winEasy && winHard && winHell;
+        
+        const judgmentButtonHtml = isJudgmentUnlocked 
+            ? `<button id="btn-judgment" onclick="startGame('judgment')" class="btn-mode" style="background: linear-gradient(135deg, #1a0000, #3e0000); box-shadow: 0 8px 30px rgba(153, 0, 0, 0.6); border: 2px solid #b91c1c; position: relative; overflow: hidden; margin-top:10px;">
+                  <div style="position: absolute; top:0; left:0; right:0; bottom:0; background: url('data:image/svg+xml;utf8,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><text y=%2250%22 font-size=%2280%22 opacity=%220.1%22>🔥</text></svg>'); pointer-events:none;"></div>
+                  <span style="color: #f87171; font-weight: 900; letter-spacing: 3px; text-shadow: 0 0 8px #dc2626;">JUDGMENT DAY ⚖️</span>
+                  <span class="btn-subtitle" style="color: #fecaca; text-shadow: none;">⏱️ 2 Menit 30 Detik | Benar: +0s | Salah: -5s</span>
+               </button>`
+            : `<button id="btn-judgment" disabled class="btn-mode" style="background: #111; border: 1px dashed #333; color: #555; cursor: not-allowed; position: relative; margin-top:10px;">
+                  <div style="position: absolute; width: 100%; top: 50%; left: 0; transform: translateY(-50%); font-size: 2rem; text-align: center; color: rgba(255,255,255,0.3); z-index: 2;">⛓️ TERKUNCI ⛓️</div>
+                  <span style="opacity: 0.3; font-weight: bold;">JUDGMENT DAY ⚖️</span>
+                  <span class="btn-subtitle" style="opacity: 0.3;">Selesaikan 3 mode lainnya (menang) untuk memutus rantai.</span>
+               </button>`;
+        
         appDiv.innerHTML = `
             <div class="menu-container animate-fade-in-up">
                 <h1 class="menu-title">Tebak Kata Kamus</h1>
@@ -1517,11 +1565,12 @@
                         <span style="color: #ef4444; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 5px red;">MODE NERAKA</span>
                         <span class="btn-subtitle" style="color: #fca5a5;">💀 Mulai: 3 Menit &nbsp;|&nbsp; Benar: +1 Detik &nbsp;|&nbsp; Salah: -2 Detik</span>
                     </button>
+                    
+                    ${judgmentButtonHtml}
                 </div>
             </div>
         `;
     }
-
 
     function showNerakaWarning() {
         state = 'menu';
@@ -1542,8 +1591,11 @@
     }
 
     function renderGameUI() {
-        const modeBadgeColor = currentMode === 'easy' ? 'color: #60a5fa;' : 'color: #fda4af;';
-        const modeName = currentMode === 'easy' ? 'Mudah' : 'Susah';
+        let modeBadgeColor = currentMode === 'easy' ? 'color: #60a5fa;' : 'color: #fda4af;';
+        let modeName = currentMode === 'easy' ? 'Mudah' : (currentMode === 'hard' ? 'Susah' : (currentMode === 'hell' ? 'Neraka' : 'Judgment'));
+        let modeIcon = currentMode === 'easy' ? '📘' : (currentMode === 'hard' ? '🔥' : (currentMode === 'hell' ? '💀' : '⚖️'));
+        if (currentMode === 'judgment') modeBadgeColor = 'color: #fca5a5; text-shadow: 0 0 5px red;';
+
 
         appDiv.innerHTML = `
             <!-- Header: Timer & Progress -->
@@ -1555,7 +1607,7 @@
                 </div>
                 <div style="text-align: center;">
                     <div class="mode-badge" style="${modeBadgeColor}">
-                        ${currentMode === 'easy' ? '📘' : '🔥'} ${modeName}
+                        ${modeIcon} ${modeName}
                     </div>
                 </div>
                 <div style="text-align: right;">
@@ -1590,6 +1642,13 @@
     function renderResult(isWin) {
         state = 'result';
         clearInterval(timerInterval);
+        document.body.classList.remove('shake-screen');
+        if (isWin) {
+            if (currentMode === 'easy') localStorage.setItem('win_easy', 'true');
+            if (currentMode === 'hard') localStorage.setItem('win_hard', 'true');
+            if (currentMode === 'hell') localStorage.setItem('win_hell', 'true');
+            if (currentMode === 'judgment') localStorage.setItem('win_judgment', 'true');
+        }
 
         let emoji, title, titleColor, message, statsHtml;
 
@@ -1630,6 +1689,34 @@
                     <div class="answer-reveal">${currentWord}</div>
                 `;
             }
+        } else if (currentMode === 'judgment') {
+            if (isWin) {
+                spawnConfetti(); spawnConfetti(); spawnConfetti(); spawnConfetti(); spawnConfetti();
+                emoji = pickRandom(['👁️', '⚖️', '👑', '🌌', '📜']);
+                title = pickRandom(['PENGUASA SEMESTA', 'THE CHOSEN ONE', 'JUDGMENT PASSED']);
+                titleColor = 'color: transparent; background: linear-gradient(135deg, #ffffff, #fca5a5, #ef4444); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);';
+                message = pickRandom([
+                    "Engkau telah menaklukkan kekacauan. Tidak ada lagi yang bisa menghalangimu.",
+                    "The ultimate trial is over. You are beyond human limitations.",
+                    "Hari Penghakiman telah usai. Kemenangan mutlak milikmu."
+                ]);
+                statsHtml = `<p class="result-stats" style="color: #fca5a5; font-weight: bold; text-shadow: 0 0 10px red;">JUDGMENT DAY · ${TOTAL_WORDS} kata · Sisa waktu ${formatTime(timeLeft)}</p>`;
+            } else {
+                emoji = pickRandom(['💀', '🩸', '🔥', '⛓️', '👁️‍🗨️']);
+                title = pickRandom(['HARI PENGHAKIMAN TIBA', 'NO ESCAPE', 'YOUR SOUL IS MINE', 'PUNISHED']);
+                titleColor = 'color: #000; text-shadow: 0 0 15px #ef4444, 0 0 5px #dc2626;';
+                message = pickRandom([
+                    "You cannot run from the truth. Waktumu telah habis.",
+                    "Satu kesalahan kecil membawamu ke kebinasaan yang abadi.",
+                    "Keadilan telah dijatuhkan. Engkau gagal.",
+                    "Api menghanguskan semua harapanmu. There is nothing left."
+                ]);
+                statsHtml = `
+                    <p class="result-stats" style="color: #991b1b;">Tumbang di kata ke-${currentWordIndex} dari ${TOTAL_WORDS}. You were judged and found wanting.</p>
+                    <p style="color: #7f1d1d; font-size: 0.8rem; margin-bottom: 4px;">Kata yang menguburmu:</p>
+                    <div class="answer-reveal" style="color: #000; background: #fca5a5; border-color: #ef4444; font-weight: 900; box-shadow: inset 0 0 10px red;">${currentWord}</div>
+                `;
+            }
         } else if (currentMode === 'hell') {
             if (isWin) {
                 spawnConfetti(); spawnConfetti(); spawnConfetti();
@@ -1668,42 +1755,67 @@
         
         if (mode === 'easy') { TOTAL_WORDS = 10; }
         else if (mode === 'hard') { TOTAL_WORDS = 12; }
-        else { TOTAL_WORDS = 15; }
+        else if (mode === 'hell') { TOTAL_WORDS = 15; }
+        else if (mode === 'judgment') { TOTAL_WORDS = 20; }
 
         let dict = dictionaryEasy;
         let pool = easyPool;
         if (mode === 'hard') { dict = dictionaryHard; pool = hardPool; }
         if (mode === 'hell') { dict = dictionaryHell; pool = hellPool; }
         
-        // Isi ulang pool jika kata yang tersisa kurang dari jumlah yang dibutuhkan
-        if (pool.length < TOTAL_WORDS) {
-            pool = shuffleArray(dict);
+        if (mode === 'judgment') {
+            let comboDict = dictionaryEasy.concat(dictionaryHard, dictionaryHell);
+            comboDict = shuffleArray(comboDict);
+            let mixedPool = shuffleArray(dictionaryJudgment).concat(comboDict.slice(0, 13));
+            targetQuestions = shuffleArray(mixedPool);
+        } else {
+            if (pool.length < TOTAL_WORDS) {
+                pool = shuffleArray(dict);
+            }
+            targetQuestions = pool.splice(-TOTAL_WORDS, TOTAL_WORDS);
+            if (mode === 'easy') { easyPool = pool; localStorage.setItem('easyPool', JSON.stringify(pool)); }
+            else if (mode === 'hard') { hardPool = pool; localStorage.setItem('hardPool', JSON.stringify(pool)); }
+            else if (mode === 'hell') { hellPool = pool; localStorage.setItem('hellPool', JSON.stringify(pool)); }
         }
-        
-        // Ambil sejumlah TOTAL_WORDS dari pool dan hapus dari pool tersebut
-        targetQuestions = pool.splice(-TOTAL_WORDS, TOTAL_WORDS);
-        
-        // Simpan sisa pool kembali dan update localStorage
-        if (mode === 'easy') { easyPool = pool; localStorage.setItem('easyPool', JSON.stringify(pool)); }
-        else if (mode === 'hard') { hardPool = pool; localStorage.setItem('hardPool', JSON.stringify(pool)); }
-        else { hellPool = pool; localStorage.setItem('hellPool', JSON.stringify(pool)); }
 
         currentWordIndex = 0;
 
         if (mode === 'easy') { timeLeft = 60; bonusTime = 3; }
         else if (mode === 'hard') { timeLeft = 90; bonusTime = 2; }
-        else { timeLeft = 180; bonusTime = 1; }
+        else if (mode === 'hell') { timeLeft = 180; bonusTime = 1; }
+        else if (mode === 'judgment') { timeLeft = 150; bonusTime = 0; }
 
         state = 'playing';
+
+        if (mode === 'judgment') {
+            document.body.classList.add('shake-screen');
+        } else {
+            document.body.classList.remove('shake-screen');
+        }
 
         renderGameUI();
         updateTimerDisplay();
         loadWord();
 
         clearInterval(timerInterval);
+        document.body.classList.remove('shake-screen');
+        if (isWin) {
+            if (currentMode === 'easy') localStorage.setItem('win_easy', 'true');
+            if (currentMode === 'hard') localStorage.setItem('win_hard', 'true');
+            if (currentMode === 'hell') localStorage.setItem('win_hell', 'true');
+            if (currentMode === 'judgment') localStorage.setItem('win_judgment', 'true');
+        }
         timerInterval = setInterval(() => {
             timeLeft--;
             updateTimerDisplay();
+            
+            if (currentMode === 'judgment') {
+                const timerDisplay = document.getElementById('timer-display');
+                if (timerDisplay && Math.random() < 0.1) {
+                    timerDisplay.classList.add('timer-fire');
+                    setTimeout(() => timerDisplay.classList.remove('timer-fire'), 800);
+                }
+            }
 
             if (timeLeft <= 0) {
                 renderResult(false);
@@ -1824,8 +1936,9 @@
             currentBox.classList.add('wrong', 'animate-shake');
             
             // NERAKA PENALTY
-            if (currentMode === 'hell') {
-                timeLeft -= 2;
+            if (currentMode === 'hell' || currentMode === 'judgment') {
+                const pen = currentMode === 'hell' ? 2 : 5;
+                timeLeft -= pen;
                 if (timeLeft < 0) timeLeft = 0;
                 updateTimerDisplay();
                 
