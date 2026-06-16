@@ -637,6 +637,45 @@
     0% { transform: scale(1); text-shadow: 0 -2px 4px #dc2626, 0 -4px 10px #f97316; }
     100% { transform: scale(1.1); text-shadow: 0 -4px 8px #dc2626, 0 -8px 15px #f97316, 0 -12px 25px #fbbf24; }
 }
+
+.heaven-container {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: hidden;
+}
+.gate {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to bottom, #fdfbfb, #ebedee);
+    border: 8px solid #fbbf24;
+    transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 50px rgba(251, 191, 36, 0.4), 0 0 30px rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+}
+.left-gate { left: 0; transform-origin: left; border-right: 4px solid #f59e0b; }
+.right-gate { right: 0; transform-origin: right; border-left: 4px solid #f59e0b; }
+
+.heaven-light {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0; height: 0;
+    background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 2s ease-in-out, width 4s, height 4s;
+    z-index: -1;
+}
+
+.gates-open .left-gate { transform: translateX(-100%); }
+.gates-open .right-gate { transform: translateX(100%); }
+.gates-open .heaven-light { opacity: 1; width: 200vw; height: 200vh; }
 </style>
 </head>
 <body>
@@ -1692,29 +1731,50 @@
         } else if (currentMode === 'judgment') {
             if (isWin) {
                 spawnConfetti(); spawnConfetti(); spawnConfetti(); spawnConfetti(); spawnConfetti();
-                emoji = pickRandom(['👁️', '⚖️', '👑', '🌌', '📜']);
-                title = pickRandom(['PENGUASA SEMESTA', 'THE CHOSEN ONE', 'JUDGMENT PASSED']);
-                titleColor = 'color: transparent; background: linear-gradient(135deg, #ffffff, #fca5a5, #ef4444); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);';
+                
+                const heavenHtml = `
+                <div id="heaven-anim" class="heaven-container">
+                    <div class="heaven-light"></div>
+                    <div class="gate left-gate">✨</div>
+                    <div class="gate right-gate">🕊️</div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', heavenHtml);
+                setTimeout(() => {
+                    const h = document.getElementById('heaven-anim');
+                    if (h) h.classList.add('gates-open');
+                }, 100);
+                setTimeout(() => {
+                    const h = document.getElementById('heaven-anim');
+                    if (h) {
+                        h.style.transition = 'opacity 2s';
+                        h.style.opacity = '0';
+                        setTimeout(() => h.remove(), 2000);
+                    }
+                }, 4000);
+
+                emoji = pickRandom(['👼', '🕊️', '✨', '🤍', '🌅']);
+                title = pickRandom(['GERBANG SURGA TERBUKA', 'KEMULIAAN ABADI', 'JIWA YANG SUCI']);
+                titleColor = 'color: transparent; background: linear-gradient(135deg, #fbbf24, #ffffff, #60a5fa); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 30px rgba(255, 255, 255, 0.9);';
                 message = pickRandom([
-                    "Engkau telah menaklukkan kekacauan. Tidak ada lagi yang bisa menghalangimu.",
-                    "The ultimate trial is over. You are beyond human limitations.",
-                    "Hari Penghakiman telah usai. Kemenangan mutlak milikmu."
+                    "Selamat datang di keabadian yang damai, jiwa yang suci. Segala penderitaanmu telah terbayar dengan cahaya yang tak pernah padam.",
+                    "Sayap-sayap surga membentang untuk menyambut kedatanganmu. Engkau adalah bukti nyata dari keindahan tekad yang murni.",
+                    "Dengarkanlah paduan suara para malaikat yang menyanyikan namamu. Beristirahatlah dalam kemuliaan yang abadi, wahai hamba yang terkasih."
                 ]);
-                statsHtml = `<p class="result-stats" style="color: #fca5a5; font-weight: bold; text-shadow: 0 0 10px red;">JUDGMENT DAY · ${TOTAL_WORDS} kata · Sisa waktu ${formatTime(timeLeft)}</p>`;
+                statsHtml = `<p class="result-stats" style="color: #fbbf24; font-weight: bold; text-shadow: 0 0 10px rgba(251,191,36,0.8);">JUDGMENT DAY · Sempurna · Sisa waktu ${formatTime(timeLeft)}</p>`;
             } else {
-                emoji = pickRandom(['💀', '🩸', '🔥', '⛓️', '👁️‍🗨️']);
-                title = pickRandom(['HARI PENGHAKIMAN TIBA', 'NO ESCAPE', 'YOUR SOUL IS MINE', 'PUNISHED']);
-                titleColor = 'color: #000; text-shadow: 0 0 15px #ef4444, 0 0 5px #dc2626;';
+                emoji = pickRandom(['🕳️', '🥀', '🌑', '🪦', '🩸']);
+                title = pickRandom(['KEHAMPAAN MUTLAK', 'KUTUKAN ABADI', 'KESALAHAN SEMESTA', 'TAK TERTOLONG']);
+                titleColor = 'color: #000; text-shadow: 0 0 20px #ef4444, 0 0 10px #7f1d1d, 0 0 5px #450a0a;';
                 message = pickRandom([
-                    "You cannot run from the truth. Waktumu telah habis.",
-                    "Satu kesalahan kecil membawamu ke kebinasaan yang abadi.",
-                    "Keadilan telah dijatuhkan. Engkau gagal.",
-                    "Api menghanguskan semua harapanmu. There is nothing left."
+                    "Bahkan kehampaan menolak menerima eksistensimu yang tak bernilai. Engkau adalah kesalahan semesta yang tak termaafkan.",
+                    "Tidak ada siksaan yang pantas untukmu, karena keberadaanmu sendiri sudah merupakan sebuah lelucon tragis bagi penciptaan.",
+                    "Iblis meneteskan air mata melihat betapa menyedihkan dan tak berartinya usahamu. Engkau tak lebih dari debu yang diinjak oleh waktu.",
+                    "Bahkan kegelapan abadi merasa jijik untuk menyembunyikan kebodohanmu. Matilah dalam kesendirian tanpa jejak."
                 ]);
                 statsHtml = `
-                    <p class="result-stats" style="color: #991b1b;">Tumbang di kata ke-${currentWordIndex} dari ${TOTAL_WORDS}. You were judged and found wanting.</p>
-                    <p style="color: #7f1d1d; font-size: 0.8rem; margin-bottom: 4px;">Kata yang menguburmu:</p>
-                    <div class="answer-reveal" style="color: #000; background: #fca5a5; border-color: #ef4444; font-weight: 900; box-shadow: inset 0 0 10px red;">${currentWord}</div>
+                    <p class="result-stats" style="color: #450a0a; font-weight: bold;">Tumbang di kata ke-${currentWordIndex} dari ${TOTAL_WORDS}. Kau tak layak diingat.</p>
+                    <p style="color: #450a0a; font-size: 0.8rem; margin-bottom: 4px;">Kata yang menjadi saksi kebodohanmu:</p>
+                    <div class="answer-reveal" style="color: #000; background: #7f1d1d; border-color: #450a0a; font-weight: 900; box-shadow: inset 0 0 15px black;">${currentWord}</div>
                 `;
             }
         } else if (currentMode === 'hell') {
