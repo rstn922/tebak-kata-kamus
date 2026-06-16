@@ -1660,21 +1660,10 @@
     function renderMenu() {
         state = 'menu';
         
-        const winEasy = localStorage.getItem('win_easy') === 'true';
-        const winHard = localStorage.getItem('win_hard') === 'true';
-        const winHell = localStorage.getItem('win_hell') === 'true';
-        const isJudgmentUnlocked = winEasy && winHard && winHell;
-        
-        const judgmentButtonHtml = isJudgmentUnlocked 
-            ? `<button id="btn-judgment" onclick="startGame('judgment')" class="btn-mode" style="background: linear-gradient(135deg, #1a0000, #3e0000); box-shadow: 0 8px 30px rgba(153, 0, 0, 0.6); border: 2px solid #b91c1c; position: relative; overflow: hidden; margin-top:10px;">
+        const judgmentButtonHtml = `<button id="btn-judgment" onclick="showJudgmentWarning()" class="btn-mode" style="background: linear-gradient(135deg, #1a0000, #3e0000); box-shadow: 0 8px 30px rgba(153, 0, 0, 0.6); border: 2px solid #b91c1c; position: relative; overflow: hidden; margin-top:10px;">
                   <div style="position: absolute; top:0; left:0; right:0; bottom:0; background: url('data:image/svg+xml;utf8,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><text y=%2250%22 font-size=%2280%22 opacity=%220.1%22>🔥</text></svg>'); pointer-events:none;"></div>
                   <span style="color: #f87171; font-weight: 900; letter-spacing: 3px; text-shadow: 0 0 8px #dc2626;">JUDGMENT DAY ⚖️</span>
                   <span class="btn-subtitle" style="color: #fecaca; text-shadow: none;">⏱️ 2 Menit 30 Detik | Benar: +0s | Salah: -5s</span>
-               </button>`
-            : `<button id="btn-judgment" disabled class="btn-mode" style="background: #111; border: 1px dashed #333; color: #555; cursor: not-allowed; position: relative; margin-top:10px;">
-                  <div style="position: absolute; width: 100%; top: 50%; left: 0; transform: translateY(-50%); font-size: 2rem; text-align: center; color: rgba(255,255,255,0.3); z-index: 2;">⛓️ TERKUNCI ⛓️</div>
-                  <span style="opacity: 0.3; font-weight: bold;">JUDGMENT DAY ⚖️</span>
-                  <span class="btn-subtitle" style="opacity: 0.3;">Selesaikan 3 mode lainnya (menang) untuk memutus rantai.</span>
                </button>`;
         
         appDiv.innerHTML = `
@@ -1704,7 +1693,26 @@
         `;
     }
 
-    function showNerakaWarning() {
+        function showJudgmentWarning() {
+        state = 'menu';
+        appDiv.innerHTML = `
+            <div class="result-container animate-fade-in-up" style="background: rgba(10, 0, 0, 0.9); padding: 30px; border-radius: 16px; border: 2px solid #991b1b; max-width: 90%; box-shadow: 0 0 50px rgba(153, 27, 27, 0.8);">
+                <div class="result-emoji" style="font-size: 5rem; animation: burn 1s infinite alternate;">⚖️</div>
+                <h1 class="result-title" style="color: #ef4444; font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px red; letter-spacing: 2px;">PERINGATAN TERAKHIR</h1>
+                <p class="result-message" style="color: #fca5a5; font-size: 1.1rem; line-height: 1.8; margin-bottom: 25px; text-shadow: 0 0 5px black;">
+                    Mode ini <strong>TIDAK DIRANCANG UNTUK DIMENANGKAN</strong>. Akal sehatmu akan diuji, kesalahan sekecil apa pun akan menghukummu tanpa ampun (-5 detik), dan jawaban benar tidak akan memberimu harapan apa pun. 
+                    <br><br>Sebagian besar pemain keluar dari sini dengan rasa frustrasi dan keputusasaan.
+                    <br><br><strong>Apakah kamu benar-benar yakin ingin menyiksa dirimu sendiri?</strong>
+                </p>
+                <div style="display: flex; gap: 15px; width: 100%; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="renderMenu()" class="btn-retry" style="background: #0f172a; color: #94a3b8; border: 1px solid #334155; width: 140px; margin: 0;">Batal (Aman)</button>
+                    <button onclick="startGame('judgment')" class="btn-retry" style="background: #7f1d1d; color: white; border: 1px solid #ef4444; width: 140px; margin: 0; box-shadow: 0 0 20px rgba(239, 68, 68, 0.7); font-weight: bold;">Hadapi 💀</button>
+                </div>
+            </div>
+        `;
+    }
+
+function showNerakaWarning() {
         state = 'menu';
         appDiv.innerHTML = `
             <div class="result-container animate-fade-in-up" style="background: rgba(69, 10, 10, 0.5); padding: 20px; border-radius: 16px; border: 1px solid #7f1d1d; max-width: 90%;">
