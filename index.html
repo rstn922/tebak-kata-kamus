@@ -1951,13 +1951,7 @@
         loadWord();
 
         clearInterval(timerInterval);
-        document.body.classList.remove('shake-screen');
-        if (isWin) {
-            if (currentMode === 'easy') localStorage.setItem('win_easy', 'true');
-            if (currentMode === 'hard') localStorage.setItem('win_hard', 'true');
-            if (currentMode === 'hell') localStorage.setItem('win_hell', 'true');
-            if (currentMode === 'judgment') localStorage.setItem('win_judgment', 'true');
-        }
+
         timerInterval = setInterval(() => {
             timeLeft--;
             updateTimerDisplay();
@@ -2138,8 +2132,10 @@
         
         const key = e.key.toUpperCase();
         if (/^[A-Z]$/.test(key)) {
+            e.preventDefault();
             handleKeyClick(key);
         } else if (key === 'BACKSPACE') {
+            e.preventDefault();
             handleBackspaceClick();
         }
     });
