@@ -1964,7 +1964,7 @@
                 }
             }
 
-            if (timeLeft <= 0) {
+            if (timeLeft <= 0 && state === 'playing') {
                 renderResult(false);
             }
         }, 1000);
