@@ -93,7 +93,7 @@
             border: 1px solid var(--border-subtle);
             box-shadow: 0 25px 65px rgba(0, 0, 0, 0.65),
                         0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-            padding: 14px 16px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -116,7 +116,7 @@
 
         @media (min-width: 640px) {
             #app {
-                padding: 22px 28px;
+                padding: 24px 30px;
                 border-radius: 26px;
             }
         }
@@ -128,7 +128,7 @@
             background: rgba(30, 41, 59, 0.9);
             border-radius: 999px;
             overflow: hidden;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             flex-shrink: 0;
         }
 
@@ -295,9 +295,9 @@
 
         /* ===== LETTER BOXES ===== */
         .letter-box {
-            width: 2.05rem;
-            height: 2.45rem;
-            font-size: 1.1rem;
+            width: 2.15rem;
+            height: 2.55rem;
+            font-size: 1.15rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -306,24 +306,24 @@
             border: 2px solid var(--border-medium);
             background: var(--bg-surface);
             text-transform: uppercase;
-            transition: all 0.14s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.1s ease, background 0.1s ease, border-color 0.1s ease;
             letter-spacing: 0.02em;
             user-select: none;
         }
 
         @media (min-width: 380px) {
             .letter-box {
-                width: 2.25rem;
-                height: 2.65rem;
-                font-size: 1.2rem;
+                width: 2.35rem;
+                height: 2.75rem;
+                font-size: 1.25rem;
             }
         }
 
         @media (min-width: 640px) {
             .letter-box {
-                width: 2.85rem;
-                height: 3.15rem;
-                font-size: 1.45rem;
+                width: 3rem;
+                height: 3.3rem;
+                font-size: 1.5rem;
                 border-radius: 12px;
             }
         }
@@ -359,7 +359,7 @@
         /* ===== ANIMATIONS ===== */
         @keyframes pop {
             0% { transform: scale(1); }
-            50% { transform: scale(1.24); }
+            50% { transform: scale(1.22); }
             100% { transform: scale(1); }
         }
 
@@ -396,8 +396,8 @@
             50% { transform: scale(1.14); }
         }
 
-        .animate-pop { animation: pop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .animate-shake { animation: shake 0.32s ease-in-out; }
+        .animate-pop { animation: pop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .animate-shake { animation: shake 0.28s ease-in-out; }
         .animate-fade-in-up { animation: fadeInUp 0.38s ease-out; }
 
         .time-bonus {
@@ -419,89 +419,6 @@
             padding: 1px 5px;
         }
 
-        /* ===== VIRTUAL KEYBOARD ===== */
-        .keyboard-container {
-            width: 100%;
-            max-width: 580px;
-            margin-top: auto;
-            padding-top: 4px;
-            user-select: none;
-        }
-
-        .keyboard-row {
-            display: flex;
-            justify-content: center;
-            gap: 4px;
-            margin-bottom: 4px;
-        }
-
-        @media (min-width: 640px) {
-            .keyboard-row { gap: 6px; margin-bottom: 6px; }
-        }
-
-        .key {
-            background: rgba(51, 65, 85, 0.85);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-bottom: 3px solid rgba(15, 23, 42, 0.8);
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            font-family: inherit;
-            color: var(--text-primary);
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 40px;
-            min-width: 0;
-            flex: 1;
-            transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease;
-            position: relative;
-        }
-
-        @media (min-width: 640px) {
-            .key {
-                font-size: 0.95rem;
-                height: 44px;
-                border-radius: 10px;
-            }
-        }
-
-        .key:active, .key.key-pressed {
-            transform: translateY(2px) scale(0.95);
-            border-bottom-width: 1px;
-        }
-
-        .key.key-correct {
-            background: #16a34a !important;
-            border-color: #4ade80 !important;
-            color: white !important;
-        }
-
-        .key.key-wrong {
-            background: #dc2626 !important;
-            border-color: #f87171 !important;
-            color: white !important;
-        }
-
-        .key-backspace {
-            flex: 1.5;
-            background: rgba(127, 29, 29, 0.65);
-            border-color: rgba(244, 63, 94, 0.3);
-            color: #fecdd3;
-            font-size: 0.95rem;
-        }
-
-        .key-hint-btn {
-            flex: 1.4;
-            background: rgba(180, 83, 9, 0.65);
-            border-color: rgba(245, 158, 11, 0.35);
-            color: #fde68a;
-            font-size: 0.78rem;
-        }
-
         /* ===== POWER-UP BAR ===== */
         .powerup-bar {
             display: flex;
@@ -509,16 +426,16 @@
             justify-content: center;
             flex-wrap: wrap;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .btn-powerup {
             background: rgba(30, 41, 59, 0.85);
             border: 1px solid var(--border-medium);
             color: var(--text-primary);
-            padding: 6px 12px;
+            padding: 7px 13px;
             border-radius: 11px;
-            font-size: 0.74rem;
+            font-size: 0.76rem;
             font-weight: 700;
             font-family: inherit;
             cursor: pointer;
@@ -554,17 +471,17 @@
             max-width: 560px;
             background: rgba(30, 41, 59, 0.65);
             border-radius: 14px;
-            padding: 12px 15px;
+            padding: 14px 16px;
             border: 1px solid var(--border-subtle);
-            margin-bottom: 10px;
+            margin-bottom: 14px;
             position: relative;
         }
 
         @media (min-width: 640px) {
             .clue-box {
-                padding: 15px 20px;
+                padding: 18px 22px;
                 border-radius: 16px;
-                margin-bottom: 14px;
+                margin-bottom: 18px;
             }
         }
 
@@ -599,21 +516,21 @@
         }
 
         .clue-text {
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             color: var(--text-primary);
             font-weight: 500;
-            line-height: 1.5;
+            line-height: 1.55;
         }
 
         @media (min-width: 640px) {
-            .clue-text { font-size: 1rem; }
+            .clue-text { font-size: 1.02rem; }
         }
 
         .extra-clue-info {
             margin-top: 8px;
             padding-top: 7px;
             border-top: 1px dashed rgba(148, 163, 184, 0.25);
-            font-size: 0.75rem;
+            font-size: 0.76rem;
             color: #fde68a;
             font-weight: 600;
             display: flex;
@@ -752,8 +669,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
             border-bottom: 1px solid var(--border-subtle);
             position: relative;
             gap: 6px;
@@ -770,7 +687,7 @@
 
         .timer-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.45rem;
+            font-size: 1.55rem;
             font-weight: 800;
             color: var(--accent-amber);
             transition: color 0.3s;
@@ -778,11 +695,11 @@
         }
 
         @media (min-width: 640px) {
-            .timer-value { font-size: 1.75rem; }
+            .timer-value { font-size: 1.85rem; }
         }
 
         .counter-value {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--accent-emerald);
             line-height: 1;
@@ -807,7 +724,7 @@
             color: white;
             border-color: #fde68a;
             box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
-            animation: pop 0.3s ease;
+            animation: pop 0.25s ease;
         }
 
         /* ===== WORD CONTAINER ===== */
@@ -817,8 +734,8 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 5px;
-            margin-bottom: 10px;
-            min-height: 48px;
+            margin-bottom: 16px;
+            min-height: 54px;
             align-items: center;
             position: relative;
         }
@@ -826,8 +743,8 @@
         @media (min-width: 640px) {
             .word-container {
                 gap: 6px;
-                margin-bottom: 12px;
-                min-height: 54px;
+                margin-bottom: 20px;
+                min-height: 62px;
             }
         }
 
@@ -1147,12 +1064,12 @@
     const TOTAL_DB_WORDS = dictionaryEasy.length + dictionaryHard.length + dictionaryHell.length + dictionaryJudgment.length;
 
     const TOPIC_META = {
-        'ALL':     { label: '🌟 Semua Topik', icon: '🌟' },
-        'SAINS':   { label: '🔬 Sains & IPA', icon: '🔬' },
-        'SOSIAL':  { label: '🌍 IPS & Geografi', icon: '🌍' },
-        'BAHASA':  { label: '📚 Bahasa & Sastra', icon: '📚' },
-        'SEJARAH': { label: '🏛️ Sejarah & Budaya', icon: '🏛️' },
-        'UMUM':    { label: '💻 Teknologi & Umum', icon: '💻' },
+        'ALL':       { label: '🌟 Semua Topik', icon: '🌟' },
+        'SAINS':     { label: '🔬 Sains & IPA', icon: '🔬' },
+        'SOSIAL':    { label: '🌍 IPS & Geografi', icon: '🌍' },
+        'BAHASA':    { label: '📚 Bahasa & Sastra', icon: '📚' },
+        'SEJARAH':   { label: '🏛️ Sejarah & Budaya', icon: '🏛️' },
+        'UMUM':      { label: '💻 Teknologi & Umum', icon: '💻' },
         'TEKA-TEKI': { label: '🧩 Teka-Teki Filosofis', icon: '🧩' }
     };
 
@@ -1212,93 +1129,7 @@
     ];
 
     // =========================================================================
-    // 2. WEB AUDIO API SYNTHESIZER (EFEK SUARA INTERAKTIF TANPA FILE EKSTERNAL)
-    // =========================================================================
-    let soundEnabled = localStorage.getItem('tkk_sound') !== 'false';
-    let audioCtx = null;
-
-    function getAudioCtx() {
-        if (!audioCtx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) audioCtx = new AudioContext();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
-        }
-        return audioCtx;
-    }
-
-    function playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.12, slideFreq = null) {
-        if (!soundEnabled) return;
-        try {
-            const ctx = getAudioCtx();
-            if (!ctx) return;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            if (slideFreq) {
-                osc.frequency.exponentialRampToValueAtTime(slideFreq, ctx.currentTime + duration);
-            }
-            gain.gain.setValueAtTime(gainVal, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + duration);
-        } catch (e) {}
-    }
-
-    function sfxKeyCorrect(stepIndex) {
-        // Ascending musical scale per letter index
-        const baseNotes = [330, 370, 415, 440, 493, 554, 587, 659, 740, 830, 880, 987];
-        const freq = baseNotes[stepIndex % baseNotes.length] * (isFeverMode() ? 1.15 : 1);
-        playTone(freq, 'triangle', 0.07, 0.11);
-    }
-
-    function sfxKeyWrong() {
-        playTone(150, 'sawtooth', 0.16, 0.14, 95);
-        if (navigator.vibrate) navigator.vibrate(45);
-    }
-
-    function sfxWordComplete() {
-        playTone(523.25, 'triangle', 0.10, 0.14);
-        setTimeout(() => playTone(659.25, 'triangle', 0.10, 0.14), 60);
-        setTimeout(() => playTone(783.99, 'triangle', 0.16, 0.16), 120);
-        setTimeout(() => playTone(1046.50, 'sine', 0.22, 0.15), 180);
-    }
-
-    function sfxFeverActivate() {
-        playTone(440, 'sine', 0.12, 0.15, 880);
-        setTimeout(() => playTone(660, 'triangle', 0.18, 0.16, 1320), 90);
-    }
-
-    function sfxTickCritical() {
-        playTone(800, 'sine', 0.04, 0.06);
-    }
-
-    function sfxWinGame() {
-        [523, 659, 784, 1046, 1318].forEach((f, idx) => {
-            setTimeout(() => playTone(f, 'triangle', 0.18, 0.16), idx * 90);
-        });
-    }
-
-    function sfxLoseGame() {
-        [392, 349, 311, 261].forEach((f, idx) => {
-            setTimeout(() => playTone(f, 'sawtooth', 0.20, 0.12), idx * 120);
-        });
-    }
-
-    function toggleSound() {
-        soundEnabled = !soundEnabled;
-        localStorage.setItem('tkk_sound', soundEnabled ? 'true' : 'false');
-        if (soundEnabled) playTone(660, 'triangle', 0.1, 0.12);
-        const btn = document.getElementById('sound-toggle-btn');
-        if (btn) btn.innerText = soundEnabled ? '🔊' : '🔇';
-    }
-
-    // =========================================================================
-    // 3. SISTEM 100% CRYPTO-RANDOM & ANTI-REPEAT (TIDAK AKAN MUNCUL 2-3 KALI)
+    // 2. SISTEM 100% CRYPTO-RANDOM & ANTI-REPEAT (TIDAK AKAN MUNCUL 2-3 KALI)
     // =========================================================================
     function cryptoRandomFloat() {
         if (window.crypto && window.crypto.getRandomValues) {
@@ -1369,7 +1200,6 @@
 
     // Build a non-repeating queue of unique words for a session
     function buildUniqueWordQueue(sourceDict, count, poolKey, topicFilter = 'ALL', extraExcludeSet = new Set()) {
-        // Filter by topic if applicable
         let filteredSource = sourceDict;
         if (topicFilter && topicFilter !== 'ALL') {
             const topicMatches = sourceDict.filter(item => item.t === topicFilter);
@@ -1378,7 +1208,6 @@
             }
         }
 
-        // Ensure 100% unique words in source
         const uniqueMap = new Map();
         for (const item of filteredSource) {
             const w = item.w.toUpperCase();
@@ -1398,7 +1227,7 @@
             return tier1.slice(0, count);
         }
 
-        // Priority 2: Words never seen in this mode (even if in older global recent)
+        // Priority 2: Words never seen in this mode
         const chosenWords = new Set(tier1.map(x => x.w));
         let tier2 = shuffleArray(allCandidates.filter(item => !seenSet.has(item.w) && !chosenWords.has(item.w)));
         let result = [...tier1, ...tier2];
@@ -1407,8 +1236,7 @@
             return result.slice(0, count);
         }
 
-        // If we exhausted the entire dictionary of hundreds of words, reset mode history
-        // while STRICTLY excluding words already in `result` AND words in `recentGlobalSet`!
+        // Reset mode history when exhausted while keeping current session & recentGlobalSet excluded
         saveSeenHistory(poolKey, []);
         result.forEach(x => chosenWords.add(x.w));
 
@@ -1419,14 +1247,13 @@
             return result.slice(0, count);
         }
 
-        // Final fallback if count > entire filtered dictionary
         result.forEach(x => chosenWords.add(x.w));
         let tier4 = shuffleArray(allCandidates.filter(item => !chosenWords.has(item.w)));
         return [...result, ...tier4].slice(0, count);
     }
 
     // =========================================================================
-    // 4. PROFIL PELAJAR, XP, PANGKAT, MISI HARIAN & LENCANA (ACHIEVEMENTS)
+    // 3. PROFIL PELAJAR, XP, PANGKAT, MISI HARIAN & LENCANA (ACHIEVEMENTS)
     // =========================================================================
     const STUDENT_RANKS = [
         { minLv: 1,  title: "Siswa Baru",          icon: "🌱" },
@@ -1473,13 +1300,12 @@
             streakDays: 1,
             lastPlayDate: '',
             unlockedBadges: [],
-            masteredWords: [] // list of {w, c, t}
+            masteredWords: []
         };
         try {
             const saved = JSON.parse(localStorage.getItem('tkk_student_profile_v3'));
             if (!saved) return def;
             const merged = { ...def, ...saved };
-            // Check daily reset
             const today = getTodayKey();
             if (merged.dailyDate !== today) {
                 merged.dailyDate = today;
@@ -1525,7 +1351,6 @@
         profile.totalWordsSolved++;
         profile.dailyWords++;
 
-        // Update daily streak
         const today = getTodayKey();
         if (profile.lastPlayDate !== today) {
             if (profile.lastPlayDate) {
@@ -1561,7 +1386,7 @@
     }
 
     // =========================================================================
-    // 5. STATE PERMAINAN
+    // 4. STATE PERMAINAN
     // =========================================================================
     let TOTAL_WORDS = 10;
     let state = 'menu';
@@ -1591,8 +1416,8 @@
     let structureHintsRemaining = 0;
     let skipsRemaining = 0;
     let extraStructureShown = false;
-    let livesRemaining = 3; // Used in Student Marathon Mode
-    let sessionHistory = []; // Words encountered in this game for post-game review
+    let livesRemaining = 3;
+    let sessionHistory = [];
 
     let boxElements = [];
     const appDiv = document.getElementById('app');
@@ -1629,12 +1454,18 @@
 
     function setTopic(topicKey) {
         selectedTopic = topicKey;
-        playTone(520, 'triangle', 0.06, 0.08);
         renderMenu();
     }
 
+    function focusNativeKeyboard() {
+        const hiddenInput = document.getElementById('hidden-input');
+        if (hiddenInput && state === 'playing') {
+            hiddenInput.focus();
+        }
+    }
+
     // =========================================================================
-    // 6. RENDERERS: MENU, MODAL LENCANA, MODAL KAMUS, GAME UI, RESULT
+    // 5. RENDERERS: MENU, MODAL LENCANA, MODAL KAMUS, GAME UI, RESULT
     // =========================================================================
     function renderMenu() {
         state = 'menu';
@@ -1664,13 +1495,10 @@
 
         appDiv.innerHTML = `
             <div class="menu-container animate-fade-in-up">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                <div style="display:flex; justify-content:center; align-items:center; margin-bottom: 6px;">
                     <span class="mode-badge" style="color:#34d399; border-color:rgba(52,211,153,0.3);">
                         ✨ ${TOTAL_DB_WORDS.toLocaleString('id-ID')} Kata Unik · 100% Random Anti-Duplikat
                     </span>
-                    <button id="sound-toggle-btn" onclick="toggleSound()" class="icon-btn-top" title="Suara Efek">
-                        ${soundEnabled ? '🔊' : '🔇'}
-                    </button>
                 </div>
 
                 <h1 class="menu-title">Tebak Kata Kamus</h1>
@@ -1878,14 +1706,6 @@
             modeIcon = '⚖️';
         }
 
-        const row1 = ['Q','W','E','R','T','Y','U','I','O','P'];
-        const row2 = ['A','S','D','F','G','H','J','K','L'];
-        const row3 = ['Z','X','C','V','B','N','M'];
-
-        const renderKeys = (arr) => arr.map(k =>
-            `<button type="button" id="vkey-${k}" class="key" onclick="handleKeyClick('${k}')">${k}</button>`
-        ).join('');
-
         const counterRightHtml = currentMode === 'student'
             ? `<div class="header-label">Nyawa & Skor</div>
                <div class="counter-value"><span id="lives-display">❤️❤️❤️</span> · <span id="word-counter">0</span></div>`
@@ -1952,17 +1772,17 @@
                 </button>
             </div>
 
-            <!-- Interactive Virtual Keyboard (Works on Mobile & PC) -->
-            <div class="keyboard-container">
-                <div class="keyboard-row">${renderKeys(row1)}</div>
-                <div class="keyboard-row" style="padding: 0 12px;">${renderKeys(row2)}</div>
-                <div class="keyboard-row">
-                    <button type="button" onclick="useLetterHint()" class="key key-hint-btn" title="Bantuan Huruf">💡</button>
-                    ${renderKeys(row3)}
-                    <button type="button" id="vkey-BACKSPACE" onclick="handleBackspaceClick()" class="key key-backspace" title="Hapus">⌫</button>
-                </div>
-            </div>
+            <p style="text-align: center; font-size: 0.78rem; color: var(--text-secondary); margin-top: auto; padding-top: 6px;">
+                Ketuk di mana saja untuk memunculkan papan ketik (Keyboard) perangkat
+            </p>
+            <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
         `;
+
+        appDiv.onclick = (e) => {
+            if (state === 'playing' && (!e.target || e.target.tagName !== 'BUTTON')) {
+                focusNativeKeyboard();
+            }
+        };
     }
 
     function updatePowerupButtons() {
@@ -2032,10 +1852,7 @@
             if (currentMode === 'hard') { localStorage.setItem('win_hard', 'true'); unlockBadge('hard_victor'); }
             if (currentMode === 'hell') { localStorage.setItem('win_hell', 'true'); unlockBadge('hell_victor'); }
             if (currentMode === 'judgment') { localStorage.setItem('win_judgment', 'true'); unlockBadge('judg_victor'); }
-            sfxWinGame();
         } else {
-            sfxLoseGame();
-            // Record current unsolved word into sessionHistory as missed
             if (currentWord && !sessionHistory.some(x => x.w === currentWord)) {
                 sessionHistory.push({ w: currentWord, c: currentClue, t: currentWordTopic, solved: false });
             }
@@ -2216,8 +2033,15 @@
     }
 
     // =========================================================================
-    // 7. LOGIKA INTI PERMAINAN & BANTUAN INTERAKTIF
+    // 6. LOGIKA INTI PERMAINAN & BANTUAN INTERAKTIF (ZERO LATENCY NATIVE INPUT)
     // =========================================================================
+    function syncHiddenInput() {
+        const hiddenInput = document.getElementById('hidden-input');
+        if (hiddenInput) {
+            hiddenInput.value = currentWord.substring(0, boxIndex);
+        }
+    }
+
     function startGame(mode) {
         currentMode = mode;
         wordCombo = 0;
@@ -2247,7 +2071,6 @@
             skipsRemaining = 1;
             targetQuestions = buildUniqueWordQueue(dictionaryHard, TOTAL_WORDS, 'hard_' + selectedTopic, selectedTopic);
         } else if (mode === 'student') {
-            // Mode Pelajar Marathon: 80 unique escalating words (Easy -> Hard)
             TOTAL_WORDS = 80;
             timeLeft = 25;
             maxTimeForBar = 25;
@@ -2302,10 +2125,6 @@
             timeLeft--;
             updateTimerDisplay();
 
-            if (timeLeft <= 10 && timeLeft > 0) {
-                sfxTickCritical();
-            }
-
             if (currentMode === 'judgment') {
                 const timerDisplay = document.getElementById('timer-display');
                 if (timerDisplay && cryptoRandomFloat() < 0.12) {
@@ -2316,10 +2135,8 @@
 
             if (timeLeft <= 0 && state === 'playing') {
                 if (currentMode === 'student' && livesRemaining > 1) {
-                    // Lose 1 life and move to next word in Student Marathon
                     livesRemaining--;
                     wordCombo = 0;
-                    sfxKeyWrong();
                     sessionHistory.push({ w: currentWord, c: currentClue, t: currentWordTopic, solved: false });
                     updateLivesDisplay();
                     updateComboDisplay();
@@ -2419,7 +2236,6 @@
         extraStructureShown = false;
         wordStartTime = Date.now();
 
-        // Mark this word as seen ONLY when it is actually displayed on screen!
         const poolKey = (currentMode === 'easy' || currentMode === 'hard')
             ? `${currentMode}_${selectedTopic}`
             : currentMode;
@@ -2458,18 +2274,10 @@
             boxElements.push(box);
         }
 
+        syncHiddenInput();
+        focusNativeKeyboard();
         updatePowerupButtons();
         updateComboDisplay();
-    }
-
-    function flashVirtualKey(letter, isCorrect) {
-        const keyEl = document.getElementById('vkey-' + letter);
-        if (!keyEl) return;
-        const cls = isCorrect ? 'key-correct' : 'key-wrong';
-        keyEl.classList.add('key-pressed', cls);
-        setTimeout(() => {
-            keyEl.classList.remove('key-pressed', cls);
-        }, 220);
     }
 
     // Power-up 1: Buka 1 Huruf (Hint)
@@ -2487,6 +2295,7 @@
         const targetLetter = currentWord[boxIndex];
         handleKeyClick(targetLetter, true);
         updatePowerupButtons();
+        focusNativeKeyboard();
     }
 
     // Power-up 2: Petunjuk Struktur Kata (Huruf Awal, Akhir, Jumlah Vokal)
@@ -2494,7 +2303,6 @@
         if (state !== 'playing' || structureHintsRemaining <= 0 || extraStructureShown) return;
         structureHintsRemaining--;
         extraStructureShown = true;
-        playTone(600, 'sine', 0.09, 0.1);
 
         const vowels = (currentWord.match(/[AIUEO]/g) || []).length;
         const firstChar = currentWord[0];
@@ -2510,15 +2318,14 @@
             `;
         }
         updatePowerupButtons();
+        focusNativeKeyboard();
     }
 
     // Power-up 3: Lewati / Ganti Kata Baru
     function useSkipWord() {
         if (state !== 'playing' || skipsRemaining <= 0) return;
         skipsRemaining--;
-        playTone(400, 'triangle', 0.1, 0.1);
 
-        // Draw 1 brand new unseen word from the appropriate dictionary
         const dict = currentMode === 'easy' ? dictionaryEasy : dictionaryHard;
         const excludeSet = new Set(targetQuestions.map(x => x.w));
         const replacement = buildUniqueWordQueue(dict, 1, currentMode + '_skip', selectedTopic, excludeSet);
@@ -2545,13 +2352,10 @@
             correctKeystrokes++;
             currentBox.classList.remove('active', 'wrong');
             currentBox.classList.add(isFromHint ? 'hinted' : 'correct', 'animate-pop');
-            flashVirtualKey(letter, true);
-            sfxKeyCorrect(boxIndex);
 
             boxIndex++;
 
             if (boxIndex === currentWord.length) {
-                // Word Completed!
                 const elapsedSec = (Date.now() - wordStartTime) / 1000;
                 if (!currentWordHadError) {
                     wordCombo++;
@@ -2559,10 +2363,7 @@
                     if (wordCombo > profile.bestCombo) {
                         profile.bestCombo = wordCombo;
                     }
-                    if (wordCombo === 5) {
-                        sfxFeverActivate();
-                        unlockBadge('streak_5');
-                    }
+                    if (wordCombo === 5) unlockBadge('streak_5');
                     if (wordCombo >= 10) unlockBadge('streak_10');
                 } else {
                     wordCombo = 0;
@@ -2574,9 +2375,7 @@
 
                 const feverBonusSec = (isFeverMode() && currentMode !== 'judgment' && currentMode !== 'student') ? 1 : 0;
                 showTimeBonus(feverBonusSec);
-                sfxWordComplete();
 
-                // Calculate XP earned
                 const baseXP = currentMode === 'easy' ? 15 : (currentMode === 'hard' ? 25 : 30);
                 const gainedXP = baseXP * (isFeverMode() ? 2 : 1);
                 sessionXP += gainedXP;
@@ -2586,7 +2385,6 @@
                 recordWordMastered(wordObj);
                 sessionHistory.push({ w: currentWord, c: currentClue, t: currentWordTopic, solved: true });
 
-                // Floating praise
                 if (elapsedSec <= 2.8) {
                     spawnPraiseBadge(`⚡ KILAT! +${gainedXP} XP`);
                 } else if (isFeverMode()) {
@@ -2614,7 +2412,7 @@
                     } else {
                         loadWord();
                     }
-                }, 420);
+                }, 400);
             } else {
                 boxElements[boxIndex].classList.add('active');
                 updatePowerupButtons();
@@ -2626,10 +2424,7 @@
 
             currentBox.classList.remove('active');
             currentBox.classList.add('wrong', 'animate-shake');
-            flashVirtualKey(letter, false);
-            sfxKeyWrong();
 
-            // Mode Pelajar Marathon life penalty on 3rd consecutive wrong key or Hell/Judgment time penalty
             if (currentMode === 'hell' || currentMode === 'judgment') {
                 const pen = currentMode === 'hell' ? 2 : 5;
                 timeLeft -= pen;
@@ -2656,28 +2451,24 @@
                 }
             }
         }
+        syncHiddenInput();
     }
 
     function handleBackspaceClick() {
         if (state !== 'playing' || boxIndex >= currentWord.length) return;
 
         const currentBox = boxElements[boxIndex];
-        const bkKey = document.getElementById('vkey-BACKSPACE');
-        if (bkKey) {
-            bkKey.classList.add('key-pressed');
-            setTimeout(() => bkKey.classList.remove('key-pressed'), 120);
-        }
 
         if (currentBox.classList.contains('wrong')) {
             currentBox.innerText = '';
             currentBox.classList.remove('wrong', 'animate-shake');
             currentBox.classList.add('active');
-            playTone(280, 'sine', 0.05, 0.07);
         }
+        syncHiddenInput();
     }
 
     // =========================================================================
-    // 8. EVENT LISTENERS (KEYBOARD FISIK & SENTUHAN MOBILE)
+    // 7. EVENT LISTENERS (NATIVE DEVICE KEYBOARD — PC & MOBILE ZERO LATENCY)
     // =========================================================================
     window.addEventListener('keydown', (e) => {
         if (state === 'result' && e.key === 'Enter') {
@@ -2700,6 +2491,26 @@
         } else if (key === 'BACKSPACE') {
             e.preventDefault();
             handleBackspaceClick();
+        }
+    });
+
+    // Mobile native keyboard input support
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.id === 'hidden-input') {
+            if (state !== 'playing') return;
+
+            const val = e.target.value.toUpperCase();
+
+            if (val.length > boxIndex) {
+                const char = val.charAt(val.length - 1);
+                if (/^[A-Z]$/.test(char)) {
+                    handleKeyClick(char);
+                } else {
+                    syncHiddenInput();
+                }
+            } else if (val.length < boxIndex) {
+                handleBackspaceClick();
+            }
         }
     });
 
