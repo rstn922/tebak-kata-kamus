@@ -306,9 +306,9 @@
             border: 2px solid var(--border-medium);
             background: var(--bg-surface);
             text-transform: uppercase;
-            transition: transform 0.1s ease, background 0.1s ease, border-color 0.1s ease;
             letter-spacing: 0.02em;
             user-select: none;
+            will-change: transform;
         }
 
         @media (min-width: 380px) {
@@ -359,16 +359,15 @@
         /* ===== ANIMATIONS ===== */
         @keyframes pop {
             0% { transform: scale(1); }
-            50% { transform: scale(1.22); }
+            50% { transform: scale(1.18); }
             100% { transform: scale(1); }
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-5px); }
-            80% { transform: translateX(4px); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-4px); }
         }
 
         @keyframes floatUp {
@@ -396,8 +395,8 @@
             50% { transform: scale(1.14); }
         }
 
-        .animate-pop { animation: pop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .animate-shake { animation: shake 0.28s ease-in-out; }
+        .animate-pop { animation: pop 0.14s ease-out; }
+        .animate-shake { animation: shake 0.22s ease-in-out; }
         .animate-fade-in-up { animation: fadeInUp 0.38s ease-out; }
 
         .time-bonus {
@@ -724,7 +723,7 @@
             color: white;
             border-color: #fde68a;
             box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
-            animation: pop 0.25s ease;
+            animation: pop 0.2s ease;
         }
 
         /* ===== WORD CONTAINER ===== */
@@ -1146,7 +1145,6 @@
 
     function shuffleArray(array) {
         const arr = [...array];
-        // Double pass cryptographic Fisher-Yates shuffle for maximum entropy
         for (let pass = 0; pass < 2; pass++) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = cryptoRandomInt(i + 1);
@@ -1181,13 +1179,11 @@
     function markWordSeen(wordStr, poolKey) {
         if (!wordStr) return;
         const w = wordStr.toUpperCase();
-        // 1. Update mode-specific seen list
         const seen = getSeenHistory(poolKey);
         if (!seen.includes(w)) {
             seen.push(w);
             saveSeenHistory(poolKey, seen);
         }
-        // 2. Update global recent buffer (last 85 words across ALL games/modes)
         const recent = getRecentGlobal().filter(item => item !== w);
         recent.push(w);
         if (recent.length > 85) {
@@ -1198,7 +1194,6 @@
         } catch (e) {}
     }
 
-    // Build a non-repeating queue of unique words for a session
     function buildUniqueWordQueue(sourceDict, count, poolKey, topicFilter = 'ALL', extraExcludeSet = new Set()) {
         let filteredSource = sourceDict;
         if (topicFilter && topicFilter !== 'ALL') {
@@ -1220,14 +1215,12 @@
         const seenSet = new Set(getSeenHistory(poolKey));
         const recentGlobalSet = new Set(getRecentGlobal());
 
-        // Priority 1: Words never seen in this mode AND not in global recent 85 words
         let tier1 = shuffleArray(allCandidates.filter(item => !seenSet.has(item.w) && !recentGlobalSet.has(item.w)));
 
         if (tier1.length >= count) {
             return tier1.slice(0, count);
         }
 
-        // Priority 2: Words never seen in this mode
         const chosenWords = new Set(tier1.map(x => x.w));
         let tier2 = shuffleArray(allCandidates.filter(item => !seenSet.has(item.w) && !chosenWords.has(item.w)));
         let result = [...tier1, ...tier2];
@@ -1236,7 +1229,6 @@
             return result.slice(0, count);
         }
 
-        // Reset mode history when exhausted while keeping current session & recentGlobalSet excluded
         saveSeenHistory(poolKey, []);
         result.forEach(x => chosenWords.add(x.w));
 
@@ -1398,13 +1390,13 @@
     let currentClue = "";
     let currentWordTopic = "UMUM";
     let boxIndex = 0;
+    let lastInputValue = " ";
 
     let timerInterval = null;
     let timeLeft = 0;
     let maxTimeForBar = 60;
     let bonusTime = 0;
 
-    // Interactive Gameplay States
     let wordCombo = 0;
     let maxSessionCombo = 0;
     let currentWordHadError = false;
@@ -1461,6 +1453,15 @@
         const hiddenInput = document.getElementById('hidden-input');
         if (hiddenInput && state === 'playing') {
             hiddenInput.focus();
+        }
+    }
+
+    // Reset sentinel buffer ONLY when loading a new word (never during active word typing!)
+    function resetInputBufferForNewWord() {
+        const hiddenInput = document.getElementById('hidden-input');
+        lastInputValue = " ";
+        if (hiddenInput) {
+            hiddenInput.value = " ";
         }
     }
 
@@ -1775,7 +1776,7 @@
             <p style="text-align: center; font-size: 0.78rem; color: var(--text-secondary); margin-top: auto; padding-top: 6px;">
                 Ketuk di mana saja untuk memunculkan papan ketik (Keyboard) perangkat
             </p>
-            <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
+            <input type="text" id="hidden-input" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-gramm="false" style="position: fixed; top: 0; left: 0; opacity: 0; width: 1px; height: 1px; border: none; outline: none; background: transparent; color: transparent; caret-color: transparent; z-index: -1;">
         `;
 
         appDiv.onclick = (e) => {
@@ -2035,13 +2036,6 @@
     // =========================================================================
     // 6. LOGIKA INTI PERMAINAN & BANTUAN INTERAKTIF (ZERO LATENCY NATIVE INPUT)
     // =========================================================================
-    function syncHiddenInput() {
-        const hiddenInput = document.getElementById('hidden-input');
-        if (hiddenInput) {
-            hiddenInput.value = currentWord.substring(0, boxIndex);
-        }
-    }
-
     function startGame(mode) {
         currentMode = mode;
         wordCombo = 0;
@@ -2274,7 +2268,7 @@
             boxElements.push(box);
         }
 
-        syncHiddenInput();
+        resetInputBufferForNewWord();
         focusNativeKeyboard();
         updatePowerupButtons();
         updateComboDisplay();
@@ -2342,20 +2336,19 @@
         const currentBox = boxElements[boxIndex];
 
         totalKeystrokes++;
-
-        currentBox.classList.remove('animate-pop', 'animate-shake');
-        void currentBox.offsetWidth;
-
-        currentBox.innerText = letter;
+        currentBox.textContent = letter;
 
         if (letter === targetLetter) {
             correctKeystrokes++;
-            currentBox.classList.remove('active', 'wrong');
+            currentBox.classList.remove('active', 'wrong', 'animate-shake');
             currentBox.classList.add(isFromHint ? 'hinted' : 'correct', 'animate-pop');
 
             boxIndex++;
 
             if (boxIndex === currentWord.length) {
+                // Reset input buffer immediately when word is solved so mobile IME starts fresh for next word
+                resetInputBufferForNewWord();
+
                 const elapsedSec = (Date.now() - wordStartTime) / 1000;
                 if (!currentWordHadError) {
                     wordCombo++;
@@ -2412,7 +2405,7 @@
                     } else {
                         loadWord();
                     }
-                }, 400);
+                }, 260);
             } else {
                 boxElements[boxIndex].classList.add('active');
                 updatePowerupButtons();
@@ -2422,7 +2415,7 @@
             wordCombo = 0;
             updateComboDisplay();
 
-            currentBox.classList.remove('active');
+            currentBox.classList.remove('active', 'animate-pop');
             currentBox.classList.add('wrong', 'animate-shake');
 
             if (currentMode === 'hell' || currentMode === 'judgment') {
@@ -2451,7 +2444,6 @@
                 }
             }
         }
-        syncHiddenInput();
     }
 
     function handleBackspaceClick() {
@@ -2460,16 +2452,17 @@
         const currentBox = boxElements[boxIndex];
 
         if (currentBox.classList.contains('wrong')) {
-            currentBox.innerText = '';
+            currentBox.textContent = '';
             currentBox.classList.remove('wrong', 'animate-shake');
             currentBox.classList.add('active');
         }
-        syncHiddenInput();
     }
 
     // =========================================================================
-    // 7. EVENT LISTENERS (NATIVE DEVICE KEYBOARD — PC & MOBILE ZERO LATENCY)
+    // 7. EVENT LISTENERS (ZERO-LATENCY MOBILE IME & DESKTOP KEYBOARD)
     // =========================================================================
+    let lastKeyHandledTimestamp = 0;
+
     window.addEventListener('keydown', (e) => {
         if (state === 'result' && e.key === 'Enter') {
             e.preventDefault();
@@ -2484,45 +2477,93 @@
             return;
         }
 
-        const key = e.key.toUpperCase();
+        // Ignore IME composition keydowns (keyCode 229 / Unidentified) so mobile 'input' event handles them cleanly
+        if (e.isComposing || e.keyCode === 229 || e.key === 'Unidentified') {
+            return;
+        }
+
+        const hiddenInput = document.getElementById('hidden-input');
+        const key = e.key ? e.key.toUpperCase() : '';
+
         if (/^[A-Z]$/.test(key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
+            lastKeyHandledTimestamp = Date.now();
             handleKeyClick(key);
+            if (hiddenInput && document.activeElement !== hiddenInput) {
+                hiddenInput.focus();
+            }
         } else if (key === 'BACKSPACE') {
             e.preventDefault();
+            lastKeyHandledTimestamp = Date.now();
             handleBackspaceClick();
-        }
-    });
-
-    // Mobile native keyboard input support
-    document.addEventListener('input', (e) => {
-        if (e.target && e.target.id === 'hidden-input') {
-            if (state !== 'playing') return;
-
-            const val = e.target.value.toUpperCase();
-
-            if (val.length > boxIndex) {
-                const char = val.charAt(val.length - 1);
-                if (/^[A-Z]$/.test(char)) {
-                    handleKeyClick(char);
-                } else {
-                    syncHiddenInput();
-                }
-            } else if (val.length < boxIndex) {
-                handleBackspaceClick();
+            if (hiddenInput && document.activeElement !== hiddenInput) {
+                hiddenInput.focus();
             }
         }
     });
 
-    // Prevent zoom on double tap (mobile)
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', (e) => {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            e.preventDefault();
+    // Mobile native keyboard input support — NEVER overwrites hiddenInput.value mid-word!
+    document.addEventListener('input', (e) => {
+        if (!e.target || e.target.id !== 'hidden-input') return;
+        if (state !== 'playing') return;
+
+        const hiddenInput = e.target;
+        const rawVal = hiddenInput.value;
+
+        // If physical keydown already handled this exact keystroke <25ms ago, just sync tracker
+        if (Date.now() - lastKeyHandledTimestamp < 25) {
+            lastInputValue = rawVal || " ";
+            if (!rawVal) hiddenInput.value = " ";
+            return;
         }
-        lastTouchEnd = now;
-    }, false);
+
+        const oldUpper = lastInputValue.toUpperCase();
+        const newUpper = rawVal.toUpperCase();
+
+        // 1. Detect Backspace / deletion
+        if (
+            (e.inputType && e.inputType.startsWith('delete')) ||
+            newUpper.length < oldUpper.length
+        ) {
+            handleBackspaceClick();
+            if (rawVal.length === 0) {
+                hiddenInput.value = " ";
+                lastInputValue = " ";
+            } else {
+                lastInputValue = rawVal;
+            }
+            return;
+        }
+
+        // 2. Extract exact newly inserted character(s) via prefix/suffix diffing
+        let p = 0;
+        while (p < oldUpper.length && p < newUpper.length && oldUpper[p] === newUpper[p]) {
+            p++;
+        }
+        let s = 0;
+        while (
+            s < (oldUpper.length - p) &&
+            s < (newUpper.length - p) &&
+            oldUpper[oldUpper.length - 1 - s] === newUpper[newUpper.length - 1 - s]
+        ) {
+            s++;
+        }
+
+        let inserted = newUpper.slice(p, newUpper.length - s);
+        if (!inserted && e.data) {
+            inserted = e.data.toUpperCase();
+        }
+
+        // Update tracker WITHOUT modifying hiddenInput.value so mobile IME never lags or repeats!
+        lastInputValue = rawVal;
+
+        const letters = inserted.replace(/[^A-Z]/g, '');
+        if (letters.length > 0) {
+            // Process the newly typed character
+            const char = letters.charAt(letters.length - 1);
+            handleKeyClick(char);
+        }
+    });
 
     // Initialize UI
     renderMenu();
